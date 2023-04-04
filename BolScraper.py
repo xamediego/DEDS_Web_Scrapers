@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def scraper(search_value, selected_category):
+def scraper(headers, search_value, selected_category):
     # Creating object to put in scraped data
     scrape_data = {'reviews': [], 'images': []}
 
@@ -11,7 +11,7 @@ def scraper(search_value, selected_category):
     params = {'searchtext': search_value, 'sort': 'rating1'}
 
     # Search for params
-    response = requests.get(search_url, params=params)
+    response = requests.get(search_url, params=params, headers=headers, timeout=15)
 
     # Check if the request was successful
     if response.status_code == 200:
@@ -37,8 +37,9 @@ def scraper(search_value, selected_category):
         past_initial = False
 
         for x in range(current_page - 1, last_page - 1):
+
             # If comment out should go through every page
-            if x == 10:
+            if x == 20:
                 break
 
             # Get the page soup
