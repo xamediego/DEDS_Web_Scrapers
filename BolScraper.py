@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def bol_scraper(search_value, selected_category):
+def scraper(search_value, selected_category):
     # Creating object to put in scraped data
     scrape_data = {'reviews': [], 'images': []}
 
@@ -37,10 +37,8 @@ def bol_scraper(search_value, selected_category):
         past_initial = False
 
         for x in range(current_page - 1, last_page - 1):
-            print(x)
-
             # If comment out should go through every page
-            if x == 1:
+            if x == 10:
                 break
 
             # Get the page soup
