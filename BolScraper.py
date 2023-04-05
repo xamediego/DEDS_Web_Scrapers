@@ -39,7 +39,7 @@ def scraper(headers, search_value, selected_category):
         for x in range(current_page - 1, last_page - 1):
 
             # If comment out should go through every page
-            if x == 100:
+            if x == 1:
                 break
 
             # Get the page soup
@@ -63,18 +63,18 @@ def scraper(headers, search_value, selected_category):
                 # Parse the HTML content of the product page using BeautifulSoup
                 product_soup = BeautifulSoup(product_response.content, 'html.parser')
 
-                scrape_data['reviews'] = scrape_data['reviews'] + scrape_review_bodies(product_soup)
+                scrape_data['reviews'] = scrape_data['reviews'] + scrape_review_bodies(product_soup, scrape_data['reviews'])
                 scrape_data['images'] = scrape_data['images'] + scrape_image_links(product_soup)
 
     return scrape_data
 
 
-def scrape_review_bodies(product_soup):
+def scrape_review_bodies(product_soup, old_reviews):
     # Find the product reviews
     review_container = product_soup.findAll('li', {'class': 'review js-review'})
 
     # Loops trough ze reviews
-    return get_review_bodies(review_container)
+    return get_review_bodies(review_container, old_reviews)
 
 
 def scrape_image_links(product_soup):
@@ -152,17 +152,17 @@ def get_image_links(product_image_ref):
     return images
 
 
-def get_review_bodies(review_container):
+def get_review_bodies(review_container,old_reviews):
     reviews = []
 
     for r_data in review_container:
         r_body = r_data.find('p', {'data-test': 'review-body'})
-        if r_body:
-            review_text = r_body.text.strip()
 
-            if str(review_text) not in reviews:
-                # sweet spot for bol reviews seem to be around 5 -> 10
+        if r_body:
+            review_text = str(r_body.text.strip())
+
+            if review_text not in old_reviews:
                 if review_text and len(review_text.split()) > 5:
-                    reviews.append(str(review_text))
+                    reviews.append(review_text)
 
     return reviews
