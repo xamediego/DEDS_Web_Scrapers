@@ -58,7 +58,7 @@ def scraper(headers, search_value, selected_category):
             # Visits products link and scrape image and review data
             for link in links:
                 # Send a GET request to the product page and get the response
-                product_response = requests.get('https://www.bol.com' + link)
+                product_response = requests.get('https://www.bol.com' + link, timeout=5)
 
                 # Parse the HTML content of the product page using BeautifulSoup
                 product_soup = BeautifulSoup(product_response.content, 'html.parser')
@@ -104,7 +104,7 @@ def get_category_soup(categories, selected_category):
 
         if cat == selected_category:
             href = ref['href']
-            cat_res = requests.get('https://www.bol.com' + href)
+            cat_res = requests.get('https://www.bol.com' + href, timeout=5)
 
             return BeautifulSoup(cat_res.content, 'html.parser')
 
@@ -127,7 +127,7 @@ def find_page_soup(page_links, current_page):
                 if (int(a_number) > current_page) & ('js_pagination_item' in str(a)):
                     href = a['href']
 
-                    pag_res = requests.get('https://www.bol.com' + href)
+                    pag_res = requests.get('https://www.bol.com' + href, timeout=5)
 
                     new_page_soup = BeautifulSoup(pag_res.content, 'html.parser')
 

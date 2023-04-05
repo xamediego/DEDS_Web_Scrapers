@@ -7,24 +7,20 @@ def scrape_adidas(headers, search_term):
 
     # Set the URL for Adidas.nl with the search term
     url = f"https://www.adidas.nl/search?q={search_term}"
+    url2 = 'https://www.adidas.nl/search?q=jassen'
 
-    print(url)
-
-    print('SEND GET')
-    # Send a request to the URL and get the response
-    response = requests.get(url, headers=headers, timeout=30)
+    response = requests.get(url2, headers=headers, timeout=30)
 
     print(response.status_code)
 
     # Parse the response using BeautifulSoup
-    soup = BeautifulSoup(response.text, "html.parser")
+    soup = BeautifulSoup(response.content, "html.parser")
 
-    # print(soup)
-    a = soup.find("div", {"class": "sheet___2Zvfp page-content___2Bh3s"})
+    a = soup.find_all("div", {"class": "sheet___2Zvfp page-content___2Bh3s"})
 
-    b = a.find_all("a")
+    print(a)
 
-    for links in b:
+    for links in a:
         print('------------')
         print(links)
 
