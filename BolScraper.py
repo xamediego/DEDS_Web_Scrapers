@@ -39,7 +39,7 @@ def scraper(headers, search_value, selected_category):
         for x in range(current_page - 1, last_page - 1):
 
             # If comment out should go through every page
-            if x == 20:
+            if x == 100:
                 break
 
             # Get the page soup

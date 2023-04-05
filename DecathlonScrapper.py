@@ -4,7 +4,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 
-def start_scraper(headers, search_value, selected_category):
+async def start_scraper(headers, search_value, selected_category):
     scrape_data = {'reviews': [], 'images': []}
 
     # Setting link and params
@@ -20,12 +20,14 @@ def start_scraper(headers, search_value, selected_category):
     print(response.status_code)
 
     if response.status_code == 200:
-        scrape_data = scraper(response, headers)
+        scrape_data = await scraper(response)
 
     return scrape_data
 
 
-def scraper(response, headers):
+# Have to use try and except because throws some error that idk how to fix
+
+async def scraper(response):
     scrape_data = {'reviews': [], 'images': []}
 
     driver = webdriver.Edge()  # or webdriver.Firefox(), webdriver.Edge(), etc.
@@ -70,40 +72,54 @@ def scraper(response, headers):
 
         print(f"CURRENT: {current_page_number} | LAST: {last_page_number}")
 
-        while int(current_page_number) < int(last_page_number):
-            nav_buttons = driver.find_elements(By.CSS_SELECTOR, "button.svelte-193vb4x")
+        try:
+            while int(current_page_number) < int(last_page_number):
+                nav_buttons = driver.find_elements(By.CSS_SELECTOR, "button.svelte-193vb4x")
 
-            paras = driver.find_elements(By.CSS_SELECTOR, "p.answer-body.svelte-1v1nczs")
+                paras = driver.find_elements(By.CSS_SELECTOR, "p.answer-body.svelte-1v1nczs")
 
-            for pa in paras:
-                try:
-                    print('ADDED REVIEW: ' + pa.text)
-                    scrape_data['reviews'].append(pa.text)
-                except:
-                    print('ERROR WHILE FINDING TEXT')
+                scrape_data['reviews'] = scrape_data['reviews'] + await get_reviews(paras)
 
-            print("REVIEW COUNT: " + str(len(scrape_data['reviews'])))
+                print("REVIEW COUNT: " + str(len(scrape_data['reviews'])))
 
-            print(len(nav_buttons) - 2)
+                await navigate_reviews(nav_buttons, current_page_number)
 
-            for x in range(0, len(nav_buttons) - 2):
-                print(nav_buttons[x])
-                b_t = nav_buttons[x].text
-                print('B_T: ' + b_t + ' > ' + str(current_page_number))
+                current_page_number += 1
 
-                button_classname = nav_buttons[x].get_attribute("class")
-                print(f"Button classname: {button_classname}")
+                nav_buttons = driver.find_elements(By.CSS_SELECTOR, "button.svelte-193vb4x")
 
-                if b_t:
-                    if int(b_t) > int(current_page_number + 1):
-                        nav_buttons[x].click()
-                        break
+                last_page_number = int(nav_buttons[len(nav_buttons) - 2].text)
 
-            current_page_number += 1
-
-            nav_buttons = driver.find_elements(By.CSS_SELECTOR, "button.svelte-193vb4x")
-            last_page_number = int(nav_buttons[len(nav_buttons) - 2].text)
-
-            print(f"CURRENT: {current_page_number} | LAST: {last_page_number}")
+                print(f"CURRENT: {current_page_number} | LAST: {last_page_number}")
+        except:
+            print('ERROR WHEN PARSING')
 
     return scrape_data
+
+
+async def navigate_reviews(nav_buttons, current_page_number):
+    for button in nav_buttons:
+        try:
+            if button.text:
+                print(button.text + ' > ' + str((current_page_number + 1)))
+                v = button.text
+
+                if int(v) > (current_page_number + 1):
+                    print('NEW PAGE: ' + v)
+                    button.click()
+                    break
+        except:
+            print('ERROR WHEN NAVIGATING')
+
+
+async def get_reviews(paragraph_list):
+    reviews = []
+
+    for pa in paragraph_list:
+        try:
+            print('REVIEW: ' + pa.text)
+            reviews.append(pa.text)
+        except:
+            print('ERROR WHEN GETTING REVIEW')
+
+    return reviews
