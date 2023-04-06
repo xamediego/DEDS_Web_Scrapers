@@ -12,12 +12,12 @@ async def scrape_data_all():
 
     scraped_date = {'reviews': [], 'images': []}
 
-    scraped_date = Tools.add_data(scraped_date, await Ama.get_ama_data(hdr, 'jassen'))
+    scraped_date = Tools.add_data(scraped_date, await Ama.get_ama_data('jassen'))
     r_l = len(scraped_date['reviews'])
     i_l = len(scraped_date['images'])
-    print(f'current of reviews collected: {r_l}')
-    print(f'current of images collected: {i_l}')
-    scraped_date = Tools.add_data(scraped_date, await Bol.get_bol_data(hdr, 'jassen', 'Herenmode'))
+    # print(f'current of reviews collected: {r_l}')
+    # print(f'current of images collected: {i_l}')
+    # scraped_date = Tools.add_data(scraped_date, await Bol.get_bol_data(hdr, 'jassen', 'Herenmode'))
     # r_l = len(scraped_date['reviews'])
     # i_l = len(scraped_date['images'])
     # print(f'current of reviews collected: {r_l}')

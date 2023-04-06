@@ -1,62 +1,124 @@
-import requests
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
-from langdetect import detect
 
-
-async def get_ama_data(hdr, search_term):
+async def get_ama_data(search_term):
     print('Amazon scrape')
-    amazon_data = scrape_amazon(hdr, search_term)
+    amazon_data = sel_scrape_amazon(search_term)
 
     return amazon_data
 
 
-def scrape_amazon(headers, search_term):
-    # Set the URL for Amazon.nl with the search term
-    url = f"https://www.amazon.nl/s?k={search_term}"
+def initial_navigation(driver, search_term):
+    driver.get("https://www.amazon.nl")
 
-    # Send a request to the URL and get the response
-    response = requests.get(url, headers=headers)
+    search_box = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "twotabsearchtextbox"))
+    )
 
-    # Parse the response using BeautifulSoup
-    soup = BeautifulSoup(response.text, "html.parser")
+    search_box.send_keys(search_term)
 
-    # Find all the search result items on the page
-    search_results = soup.find_all("div", {"data-component-type": "s-search-result"})
+    search_button = driver.find_element(By.XPATH, "//input[@type='submit']")
+    search_button.click()
 
-    # Extract the relevant information from each search result item
+    category_dropdown = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "searchDropdownBox"))
+    )
+
+    category_dropdown.send_keys("Kleding, schoenen en sieraden")
+
+    search_box.submit()
+
+
+def sel_scrape_amazon(search_term):
+    data = {"reviews": [], "images": []}
+
+    driver = webdriver.Edge()
+
+    initial_navigation(driver, search_term)
+
+    url = driver.current_url
+
+    try:
+        while check_next(driver, url):
+            url = get_next_url(driver)
+
+            r_data = prod_page(driver)
+
+            data['reviews'] = data['reviews'] + r_data['reviews']
+            data['images'] = data['images'] + r_data['images']
+
+    except IndexError:
+        print('fugg')
+
+    return data
+
+
+def prod_page(driver):
+    search_results = driver.find_elements(By.CSS_SELECTOR, 'div[data-component-type="s-search-result"]')
+
+    soup_result = []
+
+    for result in search_results:
+        html = result.get_attribute('innerHTML')
+        soup_result.append(BeautifulSoup(html, 'html.parser'))
+
+    return parse_page(driver, soup_result)
+
+
+def parse_page(driver, soup_result):
+    data = {"reviews": [], "images": []}
+
+    for result in soup_result:
+        a_tag = result.select_one('a.a-link-normal.s-no-outline')
+
+        p_link = 'https://www.amazon.nl' + a_tag['href']
+
+        r_data = get_data(driver, p_link)
+
+        data['reviews'] = data['reviews'] + r_data['reviews']
+        data['images'] = data['images'] + r_data['images']
+
+    return data
+
+
+def check_next(driver, link):
+    driver.get(link)
+
+    try:
+        search_result = driver.find_element(By.CSS_SELECTOR,
+                                            "a.s-pagination-item.s-pagination-next.s-pagination-button.s-pagination-separator")
+        return True
+    except IndexError:
+        return False
+
+
+def get_next_url(driver):
+    search_result = driver.find_element(By.CSS_SELECTOR,
+                                        "a.s-pagination-item.s-pagination-next.s-pagination-button.s-pagination-separator")
+
+    return search_result.get_attribute('href')
+
+
+def get_data(driver, product_url):
     reviews = []
     images = []
 
-    for result in search_results:
-        # Extract the product URL
-        product_url = result.find("a", {"class": "a-link-normal"})["href"]
-        product_url = "https://www.amazon.nl" + product_url
+    driver.get(product_url)
 
-        # Send a request to the product URL and get the response
-        response = requests.get(product_url, headers=headers)
+    review_elements = driver.find_elements(By.CSS_SELECTOR, 'div[data-hook="review"]')
 
-        # Parse the response using BeautifulSoup
-        soup = BeautifulSoup(response.text, "html.parser")
+    for review_element in review_elements:
+        review_text = review_element.find_element(By.CSS_SELECTOR, 'span[data-hook="review-body"]')
 
-        # Check if the product has at least one review
-        review_elements = soup.find_all("div", {"data-hook": "review"})
-        if len(review_elements) == 0:
-            continue
+        reviews.append(review_text)
 
-        for review_element in review_elements:
-            review_text = review_element.find("span", {"data-hook": "review-body"}).text.strip()
-            # Check if the review is written in Dutch using a regular expression
+    image_elements = driver.find_elements(By.CSS_SELECTOR, 'img.a-dynamic-image')
 
-            if detect(review_text) == 'nl':
-                reviews.append(review_text)
+    for image_element in image_elements:
+        images.append(image_element.get_attribute("src"))
 
-        # Extract the product image links
-        image_elements = soup.find_all("img", {"class": "a-dynamic-image"})
-        for image_element in image_elements:
-            images.append(image_element["src"])
-
-    # Create the data object with the reviews and image links
-    data = {"reviews": reviews, "images": images}
-
-    return data
+    return {"reviews": reviews, "images": images}
