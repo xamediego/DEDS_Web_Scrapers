@@ -4,6 +4,13 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 
+async def get_deca_data(hdr, search_term, deca_category):
+    print('Deca scrape')
+    deca_data = await start_scraper(hdr, search_term, deca_category)
+
+    return deca_data
+
+
 async def start_scraper(headers, search_value, selected_category):
     scrape_data = {'reviews': [], 'images': []}
 

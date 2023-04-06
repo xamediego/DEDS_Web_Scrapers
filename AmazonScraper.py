@@ -1,8 +1,14 @@
 import requests
 from bs4 import BeautifulSoup
-import re
 
 from langdetect import detect
+
+
+async def get_ama_data(hdr, search_term):
+    print('Amazon scrape')
+    amazon_data = scrape_amazon(hdr, search_term)
+
+    return amazon_data
 
 
 def scrape_amazon(headers, search_term):
@@ -49,7 +55,6 @@ def scrape_amazon(headers, search_term):
         image_elements = soup.find_all("img", {"class": "a-dynamic-image"})
         for image_element in image_elements:
             images.append(image_element["src"])
-
 
     # Create the data object with the reviews and image links
     data = {"reviews": reviews, "images": images}

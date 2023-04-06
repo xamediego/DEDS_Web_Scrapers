@@ -2,6 +2,13 @@ import requests
 from bs4 import BeautifulSoup
 
 
+async def get_bol_data(hdr, search_term, bol_category):
+    print('Bol scrape')
+    bol_data = scraper(hdr, search_term, bol_category)
+
+    return bol_data
+
+
 def scraper(headers, search_value, selected_category):
     # Creating object to put in scraped data
     scrape_data = {'reviews': [], 'images': []}
