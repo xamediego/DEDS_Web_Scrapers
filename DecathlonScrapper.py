@@ -32,12 +32,10 @@ async def start_scraper(headers, search_value, selected_category):
     return scrape_data
 
 
-# Have to use try and except because throws some error that idk how to fix
-
 async def scraper(response):
     scrape_data = {'reviews': [], 'images': []}
 
-    driver = webdriver.Edge()  # or webdriver.Firefox(), webdriver.Edge(), etc.
+    driver = webdriver.Edge()
 
     # Parse the response with BeautifulSoup
     current_page_soup = BeautifulSoup(response.content, 'html.parser')
@@ -52,40 +50,21 @@ async def scraper(response):
 
         link = f"https://www.decathlon.nl/{product_link}"
         new_link = link.replace("nl//p/", "nl/r/")
-        print(new_link)
 
         driver.get(new_link)
 
-        buttons = driver.find_elements(By.TAG_NAME, "button")
+        agree_cookie_consent(driver)
 
-        for button in buttons:
-            if button.text == 'Akkoord en sluiten':
-                button.click()
-                break
-
-        current_page_number = 0
-        last_page_number = 1
-
-        current_page_span = driver.find_elements(By.CSS_SELECTOR, "span.current-page svelte-193vb4x")
-        if current_page_span:
-            print('CURRENT PAGE SPAN: ' + str(current_page_span))
-            current_page_number = int(current_page_span[0].text)
+        current_page_number = get_current_nav_number(driver)
+        last_page_number = get_last_nav_number(driver)
 
         nav_buttons = driver.find_elements(By.CSS_SELECTOR, "button.svelte-193vb4x")
-        if nav_buttons:
-            ind = len(nav_buttons) - 2
-            print('LAST: ' + nav_buttons[ind].text)
-            last_page_number = nav_buttons[ind].text
 
         print(f"CURRENT: {current_page_number} | LAST: {last_page_number}")
 
         try:
             while int(current_page_number) < int(last_page_number):
-                nav_buttons = driver.find_elements(By.CSS_SELECTOR, "button.svelte-193vb4x")
-
-                paras = driver.find_elements(By.CSS_SELECTOR, "p.answer-body.svelte-1v1nczs")
-
-                scrape_data['reviews'] = scrape_data['reviews'] + await get_reviews(paras)
+                scrape_data['reviews'] = scrape_data['reviews'] + await get_reviews(driver)
 
                 print("REVIEW COUNT: " + str(len(scrape_data['reviews'])))
 
@@ -104,6 +83,37 @@ async def scraper(response):
     return scrape_data
 
 
+def agree_cookie_consent(driver):
+    buttons = driver.find_elements(By.TAG_NAME, "button")
+
+    for button in buttons:
+        if button.text == 'Akkoord en sluiten':
+            button.click()
+            break
+
+
+def get_current_nav_number(driver):
+    current_page_number = 0
+
+    current_page_span = driver.find_elements(By.CSS_SELECTOR, "span.current-page svelte-193vb4x")
+    if current_page_span:
+        current_page_number = int(current_page_span[0].text)
+
+    return current_page_number
+
+
+def get_last_nav_number(driver):
+    nav_buttons = driver.find_elements(By.CSS_SELECTOR, "button.svelte-193vb4x")
+
+    last_page_number = 1
+
+    if nav_buttons:
+        ind = len(nav_buttons) - 2
+        last_page_number = nav_buttons[ind].text
+
+    return last_page_number
+
+
 async def navigate_reviews(nav_buttons, current_page_number):
     for button in nav_buttons:
         try:
@@ -119,13 +129,15 @@ async def navigate_reviews(nav_buttons, current_page_number):
             print('ERROR WHEN NAVIGATING')
 
 
-async def get_reviews(paragraph_list):
+async def get_reviews(driver):
+    paragraph_list = driver.find_elements(By.CSS_SELECTOR, "p.answer-body.svelte-1v1nczs")
+
     reviews = []
 
-    for pa in paragraph_list:
+    for p in paragraph_list:
         try:
-            print('REVIEW: ' + pa.text)
-            reviews.append(pa.text)
+            print('REVIEW: ' + p.text)
+            reviews.append(p.text)
         except:
             print('ERROR WHEN GETTING REVIEW')
 
