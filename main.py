@@ -1,22 +1,19 @@
 import Tools
 import AmazonScraper as Ama
-import DecathlonScrapper as Deca
+import Deca_Scraper as Deca
 import asyncio
 from hdfs import InsecureClient
 import Bol_Sel as Bs
 
 
 async def scrape_data_all():
-    hdr = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36'}
-
     scraped_date = {'reviews': [], 'images': []}
 
     scraped_date = Tools.add_data(scraped_date, await Ama.get_ama_data('jassen'))
 
     scraped_date = Tools.add_data(scraped_date, await Bs.get_bol_data('jassen', 'Herenmode'))
 
-    scraped_date = Tools.add_data(scraped_date, await Deca.get_deca_data(hdr, 'jassen', 'Heren'))
+    scraped_date = Tools.add_data(scraped_date, await Deca.get_deca_data('jassen'))
 
     r_l = len(scraped_date['reviews'])
     i_l = len(scraped_date['images'])

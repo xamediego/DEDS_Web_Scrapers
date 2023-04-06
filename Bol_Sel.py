@@ -9,6 +9,27 @@ async def get_bol_data(search_term, bol_category):
 
     return bol_data
 
+def scraper(search_value, selected_category):
+    data = {'reviews': [], 'images': []}
+
+    driver = webdriver.Edge()
+
+    initial_navigation(driver, 'https://www.bol.com/nl/nl/s/', search_value, selected_category, 'Kleding')
+
+    url = driver.current_url
+
+    while check_next(driver, url):
+        url = get_next_url(driver)
+
+        r_data = prod_page(driver)
+
+        data['reviews'] = data['reviews'] + r_data['reviews']
+        data['images'] = data['images'] + r_data['images']
+
+        print('next')
+
+    return data
+
 
 def initial_navigation(driver, site_url, search_value, selected_category, sub_category):
     hdr = {
@@ -44,29 +65,6 @@ def get_category_link(driver, selected_category):
             break
 
     return link
-
-
-
-def scraper(search_value, selected_category):
-    data = {'reviews': [], 'images': []}
-
-    driver = webdriver.Edge()
-
-    initial_navigation(driver, 'https://www.bol.com/nl/nl/s/', search_value, selected_category, 'Kleding')
-
-    url = driver.current_url
-
-    while check_next(driver, url):
-        url = get_next_url(driver)
-
-        r_data = prod_page(driver)
-
-        data['reviews'] = data['reviews'] + r_data['reviews']
-        data['images'] = data['images'] + r_data['images']
-
-        print('next')
-
-    return data
 
 
 def prod_page(driver):
