@@ -1,9 +1,9 @@
 import Tools
-import BolScraper as Bol
 import AmazonScraper as Ama
 import DecathlonScrapper as Deca
 import asyncio
 from hdfs import InsecureClient
+import Bol_Sel as Bs
 
 
 async def scrape_data_all():
@@ -13,25 +13,18 @@ async def scrape_data_all():
     scraped_date = {'reviews': [], 'images': []}
 
     scraped_date = Tools.add_data(scraped_date, await Ama.get_ama_data('jassen'))
-    r_l = len(scraped_date['reviews'])
-    i_l = len(scraped_date['images'])
-    # print(f'current of reviews collected: {r_l}')
-    # print(f'current of images collected: {i_l}')
-    # scraped_date = Tools.add_data(scraped_date, await Bol.get_bol_data(hdr, 'jassen', 'Herenmode'))
-    # r_l = len(scraped_date['reviews'])
-    # i_l = len(scraped_date['images'])
-    # print(f'current of reviews collected: {r_l}')
-    # print(f'current of images collected: {i_l}')
-    # scraped_date = Tools.add_data(scraped_date, await Deca.get_deca_data(hdr, 'jassen', 'Heren'))
+
+    scraped_date = Tools.add_data(scraped_date, await Bs.get_bol_data('jassen', 'Herenmode'))
+
+    scraped_date = Tools.add_data(scraped_date, await Deca.get_deca_data(hdr, 'jassen', 'Heren'))
 
     r_l = len(scraped_date['reviews'])
     i_l = len(scraped_date['images'])
-
-    # Write reviews to txt
     print(f'Amount of reviews collected: {r_l}')
     print(f'Amount of images collected: {i_l}')
+
+    # Write reviews to txt
     print("Write reviews to txt")
-    print(scraped_date['reviews'])
 
     # Define the data to be cleaned
     data = scraped_date['reviews']

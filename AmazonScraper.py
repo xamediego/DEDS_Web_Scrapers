@@ -12,6 +12,26 @@ async def get_ama_data(search_term):
     return amazon_data
 
 
+def sel_scrape_amazon(search_term):
+    data = {"reviews": [], "images": []}
+
+    driver = webdriver.Edge()
+
+    initial_navigation(driver, search_term)
+
+    url = driver.current_url
+
+    while check_next(driver, url):
+        url = get_next_url(driver)
+
+        r_data = prod_page(driver)
+
+        data['reviews'] = data['reviews'] + r_data['reviews']
+        data['images'] = data['images'] + r_data['images']
+
+    return data
+
+
 def initial_navigation(driver, search_term):
     driver.get("https://www.amazon.nl")
 
@@ -31,30 +51,6 @@ def initial_navigation(driver, search_term):
     category_dropdown.send_keys("Kleding, schoenen en sieraden")
 
     search_box.submit()
-
-
-def sel_scrape_amazon(search_term):
-    data = {"reviews": [], "images": []}
-
-    driver = webdriver.Edge()
-
-    initial_navigation(driver, search_term)
-
-    url = driver.current_url
-
-    try:
-        while check_next(driver, url):
-            url = get_next_url(driver)
-
-            r_data = prod_page(driver)
-
-            data['reviews'] = data['reviews'] + r_data['reviews']
-            data['images'] = data['images'] + r_data['images']
-
-    except IndexError:
-        print('fugg')
-
-    return data
 
 
 def prod_page(driver):
@@ -88,12 +84,10 @@ def parse_page(driver, soup_result):
 def check_next(driver, link):
     driver.get(link)
 
-    try:
-        search_result = driver.find_element(By.CSS_SELECTOR,
-                                            "a.s-pagination-item.s-pagination-next.s-pagination-button.s-pagination-separator")
-        return True
-    except IndexError:
-        return False
+    search_result = driver.find_elements(By.CSS_SELECTOR,
+                                         "a.s-pagination-item.s-pagination-next.s-pagination-button.s-pagination-separator")
+
+    return len(search_result) > 0
 
 
 def get_next_url(driver):
