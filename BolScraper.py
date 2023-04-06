@@ -1,5 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
 
 async def get_bol_data(hdr, search_term, bol_category):
@@ -46,7 +50,7 @@ def scraper(headers, search_value, selected_category):
         for x in range(current_page - 1, last_page - 1):
 
             # If comment out should go through every page
-            if x == 1:
+            if x == 100:
                 break
 
             # Get the page soup
@@ -169,7 +173,6 @@ def get_review_bodies(review_container,old_reviews):
             review_text = str(r_body.text.strip())
 
             if review_text not in old_reviews:
-                if review_text and len(review_text.split()) > 5:
-                    reviews.append(review_text)
+                reviews.append(review_text)
 
     return reviews

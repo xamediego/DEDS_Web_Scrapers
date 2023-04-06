@@ -18,9 +18,6 @@ async def start_scraper(headers, search_value, selected_category):
     search_url = f'https://www.decathlon.nl/search?Ntt={search_value}'
     params = {'searchtext': search_value}
 
-    print('SEARCH AT LINK')
-    print(search_url)
-
     # Search for params
     response = requests.get(search_url, params=params, headers=headers, timeout=15)
 
@@ -55,30 +52,10 @@ async def scraper(response):
 
         agree_cookie_consent(driver)
 
-        current_page_number = get_current_nav_number(driver)
-        last_page_number = get_last_nav_number(driver)
+        # scrape_data['reviews'] = scrape_data['reviews'] + await get_reviews(driver)
+        scrape_data['reviews'] = scrape_data['reviews'] + await parse_all_reviews(driver)
 
-        nav_buttons = driver.find_elements(By.CSS_SELECTOR, "button.svelte-193vb4x")
-
-        print(f"CURRENT: {current_page_number} | LAST: {last_page_number}")
-
-        try:
-            while int(current_page_number) < int(last_page_number):
-                scrape_data['reviews'] = scrape_data['reviews'] + await get_reviews(driver)
-
-                print("REVIEW COUNT: " + str(len(scrape_data['reviews'])))
-
-                await navigate_reviews(nav_buttons, current_page_number)
-
-                current_page_number += 1
-
-                nav_buttons = driver.find_elements(By.CSS_SELECTOR, "button.svelte-193vb4x")
-
-                last_page_number = int(nav_buttons[len(nav_buttons) - 2].text)
-
-                print(f"CURRENT: {current_page_number} | LAST: {last_page_number}")
-        except:
-            print('ERROR WHEN PARSING')
+        print('CURRENT COMPLETE R COUNT: ' + str(len(scrape_data['reviews'])))
 
     return scrape_data
 
@@ -114,11 +91,43 @@ def get_last_nav_number(driver):
     return last_page_number
 
 
+async def parse_all_reviews(driver):
+    reviews = []
+
+    current_page_number = get_current_nav_number(driver)
+    last_page_number = get_last_nav_number(driver)
+
+    nav_buttons = driver.find_elements(By.CSS_SELECTOR, "button.svelte-193vb4x")
+
+    print(f"CURRENT: {current_page_number} | LAST: {last_page_number}")
+
+    try:
+        while int(current_page_number) < int(last_page_number):
+
+            print('GET R')
+            reviews = reviews + await get_reviews(driver)
+
+            print("REVIEW COUNT: " + str(len(reviews)))
+
+            await navigate_reviews(nav_buttons, current_page_number)
+
+            current_page_number += 1
+
+            nav_buttons = driver.find_elements(By.CSS_SELECTOR, "button.svelte-193vb4x")
+
+            last_page_number = int(nav_buttons[len(nav_buttons) - 2].text)
+
+            print(f"CURRENT: {current_page_number} | LAST: {last_page_number}")
+    except:
+        print('ERROR WHILE NAVIGATING REVIEWS')
+
+    return reviews
+
+
 async def navigate_reviews(nav_buttons, current_page_number):
     for button in nav_buttons:
         try:
             if button.text:
-                print(button.text + ' > ' + str((current_page_number + 1)))
                 v = button.text
 
                 if int(v) > (current_page_number + 1):
@@ -136,9 +145,10 @@ async def get_reviews(driver):
 
     for p in paragraph_list:
         try:
-            print('REVIEW: ' + p.text)
             reviews.append(p.text)
         except:
             print('ERROR WHEN GETTING REVIEW')
+
+    print('ADD: R ' + str(len(reviews)))
 
     return reviews

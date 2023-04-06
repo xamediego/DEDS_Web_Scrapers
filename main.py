@@ -13,8 +13,16 @@ async def scrape_data_all():
     scraped_date = {'reviews': [], 'images': []}
 
     scraped_date = Tools.add_data(scraped_date, await Ama.get_ama_data(hdr, 'jassen'))
+    r_l = len(scraped_date['reviews'])
+    i_l = len(scraped_date['images'])
+    print(f'current of reviews collected: {r_l}')
+    print(f'current of images collected: {i_l}')
     scraped_date = Tools.add_data(scraped_date, await Bol.get_bol_data(hdr, 'jassen', 'Herenmode'))
-    scraped_date = Tools.add_data(scraped_date, await Deca.get_deca_data(hdr, 'jassen', 'Heren'))
+    # r_l = len(scraped_date['reviews'])
+    # i_l = len(scraped_date['images'])
+    # print(f'current of reviews collected: {r_l}')
+    # print(f'current of images collected: {i_l}')
+    # scraped_date = Tools.add_data(scraped_date, await Deca.get_deca_data(hdr, 'jassen', 'Heren'))
 
     r_l = len(scraped_date['reviews'])
     i_l = len(scraped_date['images'])
@@ -23,12 +31,20 @@ async def scrape_data_all():
     print(f'Amount of reviews collected: {r_l}')
     print(f'Amount of images collected: {i_l}')
     print("Write reviews to txt")
-    print(scraped_date['images'])
+    print(scraped_date['reviews'])
+
+    # Define the data to be cleaned
+    data = scraped_date['reviews']
+
+    # Call the remove_unicode function to clean the data
+    cleaned_data = Tools.remove_unicode(data)
 
     folder_path = "images"
 
-    Tools.write_array_to_file(scraped_date['reviews'], 'text_files/output.txt')
+    # Tools.write_array_to_file(cleaned_data, 'text_files/output.txt')
     Tools.save_images_to_folder(scraped_date['images'], folder_path)
+
+    # Tools.write_to_hdsf(scraped_date['reviews'])
 
     # client = InsecureClient('hdfs://localhost:9000')
     #
@@ -36,3 +52,22 @@ async def scrape_data_all():
 
 
 asyncio.run(scrape_data_all())
+
+# def test_hsdf():
+#     data = ['Prima jas voor een lage prijs.', 'Goede pasvorm heel licht en aangenaam om te dragen.',
+#             'Snelle reactie, snelle levering, perfect afhandeling, precies zoals ik het verwachte.']
+#
+#     # Call the remove_unicode function to clean the data
+#     cleaned_data = Tools.remove_unicode(data)
+#
+#     # Open the text file for writing
+#     with open('input/example.txt', 'w') as file:
+#         # Write each row of cleaned data to the text file
+#         for row in cleaned_data:
+#             file.write(row + '\n')
+#
+#     print('WRITE TO HDSF')
+#     Tools.write_to_hdsf(cleaned_data)
+#
+#
+# test_hsdf()
