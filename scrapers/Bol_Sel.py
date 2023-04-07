@@ -26,7 +26,6 @@ def scraper(search_value, selected_category):
         data['reviews'] = data['reviews'] + r_data['reviews']
         data['images'] = data['images'] + r_data['images']
 
-        print('next')
 
     return data
 

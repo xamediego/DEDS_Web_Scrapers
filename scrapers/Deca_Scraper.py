@@ -1,5 +1,5 @@
-import os
 import time
+
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -90,7 +90,6 @@ def product_loop(driver, current_page_soup):
 
     for prod_div in div_element:
         scrape_data['reviews'] = scrape_data['reviews'] + p_s(driver, prod_div)
-        print('CURRENT AMOUNT NEW: ' + str(len(scrape_data['reviews'])))
 
     return scrape_data
 
@@ -120,7 +119,7 @@ def parse_all_reviews(driver):
 
         next_button.click()
 
-        time.sleep(1)
+        time.sleep(0.01)
 
     return reviews
 

@@ -21,13 +21,18 @@ def sel_scrape_amazon(search_term):
 
     url = driver.current_url
 
-    while check_next(driver, url):
-        url = get_next_url(driver)
+    r_data = prod_page(driver)
 
-        r_data = prod_page(driver)
+    data['reviews'] = data['reviews'] + r_data['reviews']
+    data['images'] = data['images'] + r_data['images']
 
-        data['reviews'] = data['reviews'] + r_data['reviews']
-        data['images'] = data['images'] + r_data['images']
+    # while check_next(driver, url):
+    #     url = get_next_url(driver)
+    #
+    #     r_data = prod_page(driver)
+    #
+    #     data['reviews'] = data['reviews'] + r_data['reviews']
+    #     data['images'] = data['images'] + r_data['images']
 
     return data
 
@@ -73,10 +78,13 @@ def parse_page(driver, soup_result):
 
         p_link = 'https://www.amazon.nl' + a_tag['href']
 
-        r_data = get_data(driver, p_link)
+        try:
+            r_data = get_data(driver, p_link)
 
-        data['reviews'] = data['reviews'] + r_data['reviews']
-        data['images'] = data['images'] + r_data['images']
+            data['reviews'] = data['reviews'] + r_data['reviews']
+            data['images'] = data['images'] + r_data['images']
+        except:
+            print('ERROR WHILE GETTING DATA')
 
     return data
 
@@ -105,14 +113,23 @@ def get_data(driver, product_url):
 
     review_elements = driver.find_elements(By.CSS_SELECTOR, 'div[data-hook="review"]')
 
-    for review_element in review_elements:
-        review_text = review_element.find_element(By.CSS_SELECTOR, 'span[data-hook="review-body"]')
+    try:
+        for review_element in review_elements:
+            review = review_element.find_element(By.CSS_SELECTOR, 'span[data-hook="review-body"]')
 
-        reviews.append(review_text)
+            review_text = review.text
+            print(review_text)
+
+            reviews.append(review_text)
+    except:
+        print('ERROR WHILE PARSING REVIEW')
 
     image_elements = driver.find_elements(By.CSS_SELECTOR, 'img.a-dynamic-image')
 
-    for image_element in image_elements:
-        images.append(image_element.get_attribute("src"))
+    try:
+        for image_element in image_elements:
+            images.append(image_element.get_attribute("src"))
+    except:
+        print('ERROR WHILE PARSING SRC')
 
     return {"reviews": reviews, "images": images}

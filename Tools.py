@@ -1,6 +1,6 @@
 import csv
 import os
-from hdfs import InsecureClient
+import subprocess
 import requests
 
 
@@ -62,37 +62,7 @@ def remove_unicode(data):
 
 
 def write_array_to_file(arr, file_path):
-    with open(file_path, 'w') as file:
+    with open(file_path, 'x') as file:
         # Write each row of data to the text file
         for row in arr:
             file.write(row + '\n')
-
-
-def write_to_hdsf(data):
-    DOCKER_NETWORK = 'docker-hadoop-master_default'
-    ENV_FILE = 'hadoop.env'
-
-    client = InsecureClient('http://localhost:9870', user='root')
-
-    # Make a new directory in HDFS
-    client.makedirs('/input')
-
-    directories = client.list('/')
-    print(directories)
-
-    client = InsecureClient('http://localhost:9870', user='root')
-
-    # Upload the local file to the Hadoop cluster
-    client.upload('/input/example.txt', 'input/example.txt', overwrite=True)
-
-    # Run the Docker image
-    os.system(f'docker run --network {DOCKER_NETWORK} --env-file {ENV_FILE} hadoop-wordcount')
-
-    # Print the output of the Hadoop job
-    with client.read('/output/part-r-00000', encoding='utf-8') as reader:
-        print(reader.read())
-
-    # Remove the output and input directories from HDFS
-    client.delete('/output', recursive=True)
-    client.delete('/input', recursive=True)
-
