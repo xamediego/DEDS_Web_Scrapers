@@ -4,10 +4,11 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 
-async def get_bol_data(search_term, bol_category):
+def scrape_full(search_term, bol_category):
     bol_data = scraper(search_term, bol_category)
 
     return bol_data
+
 
 def scraper(search_value, selected_category):
     data = {'reviews': [], 'images': []}
@@ -25,7 +26,6 @@ def scraper(search_value, selected_category):
 
         data['reviews'] = data['reviews'] + r_data['reviews']
         data['images'] = data['images'] + r_data['images']
-
 
     return data
 

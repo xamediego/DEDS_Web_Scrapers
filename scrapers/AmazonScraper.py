@@ -5,7 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-async def get_ama_data(search_term):
+def scrape_full(search_term):
     print('Amazon scrape')
     amazon_data = sel_scrape_amazon(search_term)
 

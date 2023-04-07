@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 
-def get_adi_data(search_term):
+def scrape_full(search_term):
     adidas_data = scraper(search_term)
 
     return adidas_data

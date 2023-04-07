@@ -6,14 +6,14 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 
-async def get_deca_data(search_term):
+def scrape_full(search_term):
     print('Deca scrape')
-    deca_data = await start_scraper(search_term)
+    deca_data = start_scraper(search_term)
 
     return deca_data
 
 
-async def start_scraper(search_value):
+def start_scraper(search_value):
     data = {'reviews': [], 'images': []}
 
     driver = webdriver.Edge()
