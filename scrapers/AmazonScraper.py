@@ -33,12 +33,12 @@ def sel_scrape_amazon(search_term, page_limit, review_page_limit):
 
         url = get_next_url(driver)
 
+        data['prices'] = data['prices'] + get_prices(driver)
+        data['titles'] = data['titles'] + get_titles(driver)
+
         r_data = prod_page(driver, review_page_limit)
         data['reviews'] = data['reviews'] + r_data['reviews']
         data['images'] = data['images'] + r_data['images']
-
-        data['prices'] = data['prices'] + get_prices(driver)
-        data['titles'] = data['titles'] + get_titles(driver)
 
         page_counter += 1
 

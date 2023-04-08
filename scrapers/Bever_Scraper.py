@@ -28,12 +28,11 @@ def scraper(search_value, page_limit):
 
         click_consent_button(driver)
 
-        r_data = prod_page(driver)
+        data['titles'] = data['titles'] + get_titles(driver)
 
+        r_data = prod_page(driver)
         data['prices'] = data['prices'] + r_data['prices']
         data['images'] = data['images'] + r_data['images']
-
-        data['titles'] = data['titles'] + get_titles(driver)
 
         page_counter += 1
 

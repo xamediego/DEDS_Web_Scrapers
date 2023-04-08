@@ -91,6 +91,7 @@ def get_product_data(driver, review_page_limit):
 
     # Gets all prices on the catalog page
     data['prices'] = data['prices'] + get_prices(driver)
+    data['titles'] = data['titles'] + get_titles(driver)
     product_soup = get_catalog_soup(driver)
 
     # Loops trough all the products shown on the catalog page and adds obtained data
