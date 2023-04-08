@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
+import Tools
 from Tools import get_scraped_data_size_info
 
 
@@ -18,6 +19,7 @@ def scraper(search_value, selected_category, page_limit):
     data = {'reviews': [], 'images': [], 'prices': []}
 
     driver = webdriver.Edge()
+    driver.set_window_size(1600, 1000)
 
     initial_navigation(driver, 'https://www.bol.com/nl/nl/s/', search_value, selected_category, 'Kleding')
 
@@ -35,9 +37,12 @@ def scraper(search_value, selected_category, page_limit):
 
         data['prices'] = data['prices'] + get_prices(driver)
 
-        get_scraped_data_size_info(data)
-
         page_counter += 1
+
+    driver.close()
+
+    print('BOL SCRAPE END')
+    get_scraped_data_size_info(data)
 
     return data
 
@@ -50,27 +55,30 @@ def initial_navigation(driver, site_url, search_value, selected_category, sub_ca
 
     response = requests.get(site_url, params=params, headers=hdr, timeout=15)
 
-    driver.get(response.url)
+    Tools.load_page(driver, response.url, 30)
 
     time.sleep(1)
 
     click_consent_button(driver)
 
-    categorized_link = get_category_link(driver, selected_category)
+    time.sleep(1)
 
-    driver.get(categorized_link)
+    categorized_link = get_category_link(driver, selected_category)
+    print(categorized_link)
+
+    Tools.load_page(driver, categorized_link, 30)
 
     time.sleep(1)
 
     categorized_link = get_category_link(driver, sub_category)
 
-    driver.get(categorized_link)
+    Tools.load_page(driver, categorized_link, 30)
 
     time.sleep(1)
 
     categorized_link = get_category_link(driver, 'Jassen')
 
-    driver.get(categorized_link)
+    Tools.load_page(driver, categorized_link, 30)
 
     time.sleep(1)
 
@@ -120,7 +128,7 @@ def parse_page(driver, soup_result):
 
 
 def get_data(driver, product_url, old_reviews):
-    driver.get(product_url)
+    Tools.load_page(driver, product_url, 30)
 
     time.sleep(1)
 
@@ -198,7 +206,7 @@ def get_prices(driver):
 
 
 def check_next(driver, link):
-    driver.get(link)
+    Tools.load_page(driver, link, 30)
 
     time.sleep(1)
 

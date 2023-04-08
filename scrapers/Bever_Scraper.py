@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 import time
 
+import Tools
 from Tools import get_scraped_data_size_info
 
 
@@ -15,6 +16,7 @@ def scraper(search_value, page_limit):
     data = {'reviews': [], 'images': [], 'prices': []}
 
     driver = webdriver.Edge()
+    driver.set_window_size(1600, 1000)
 
     initial_navigation(driver, 'https://www.bever.nl/', search_value)
 
@@ -32,9 +34,12 @@ def scraper(search_value, page_limit):
         data['prices'] = data['prices'] + r_data['prices']
         data['images'] = data['images'] + r_data['images']
 
-        get_scraped_data_size_info(data)
-
         page_counter += 1
+
+    driver.close()
+
+    print('BEVER SCRAPE END')
+    get_scraped_data_size_info(data)
 
     return data
 
@@ -44,28 +49,28 @@ def prod_page(driver):
 
     prod_content = driver.find_elements(By.CSS_SELECTOR, 'a.as-a-link.as-a-link--container.as-m-product-tile__link')
 
-    print('PROD COUNT: ' + str(len(prod_content)))
-
     prod_links = []
 
     try:
         for product in prod_content:
             try:
-                prod_links.append(product.get_attribute('href'))
+                prod_link = product.get_attribute('href')
+
+                prod_links.append(prod_link)
             except:
                 print('ERROR IN BEVER SCRAPER WHILE GETTING PRODUCT LINK')
     except:
         print('ERROR WHILE GETTING LINKS')
 
-    print(len(prod_links))
     time.sleep(1)
 
     for prod_link in prod_links:
-        driver.get(prod_link)
+        Tools.load_page(driver, prod_link, 30)
 
         time.sleep(1)
 
-        data['images'] = data['images'] + get_images(driver)
+        new_images = get_images(driver)
+        data['images'] = data['images'] + new_images
 
         prices = driver.find_elements(By.CSS_SELECTOR, 'span[data-qa="sell_price"]')
 
@@ -85,16 +90,18 @@ def get_images(driver):
     image_containers = driver.find_elements(By.CSS_SELECTOR, 'div.as-m-product-image-magnify')
 
     for image_container in image_containers:
-        images = image_container.find_elements(By.CSS_SELECTOR, 'img')
+        images_element = image_container.find_elements(By.CSS_SELECTOR, 'img')
 
-        if len(images) > 0:
-            images.append(images[0].get_attribute('src'))
+        if len(images_element) > 0:
+            image_link = images_element[0].get_attribute('src')
+
+            images.append(image_link)
 
     return images
 
 
 def initial_navigation(driver, site_url, search_value):
-    driver.get(site_url)
+    Tools.load_page(driver, site_url, 30)
 
     time.sleep(1)
 
@@ -110,7 +117,7 @@ def initial_navigation(driver, site_url, search_value):
 
 
 def check_next(driver, link):
-    driver.get(link)
+    Tools.load_page(driver, link, 30)
 
     time.sleep(1)
 
@@ -129,4 +136,4 @@ def click_consent_button(driver):
     consent_button = driver.find_elements(By.ID, 'accept-all-cookies')
 
     if len(consent_button) > 0:
-        consent_button.click()
+        consent_button[0].click()

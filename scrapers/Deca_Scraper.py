@@ -18,17 +18,6 @@ def scrape_full(search_term, page_limit, review_page_limit):
     return deca_data
 
 
-def deca_load(driver, link, load_time):
-    driver.set_page_load_timeout(load_time)
-
-    try:
-        driver.get(link)
-        # continue with the next steps
-    except TimeoutException as e:
-        print("Page load Timeout Occurred. Refreshing !!!")
-        driver.refresh()
-
-
 def initial_navigation(driver, site_url, search_value):
     hdr = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36'}
@@ -37,7 +26,7 @@ def initial_navigation(driver, site_url, search_value):
 
     response = requests.get(site_url, headers=hdr, timeout=15)
 
-    deca_load(driver, response.url, 10)
+    Tools.load_page(driver, response.url, 30)
 
     time.sleep(1)
 
@@ -46,6 +35,7 @@ def initial_navigation(driver, site_url, search_value):
 
 def start_scraper(search_value, page_limit, review_page_limit):
     driver = webdriver.Edge()
+    driver.set_window_size(1600, 1000)
 
     initial_navigation(driver, 'https://www.decathlon.nl/', search_value)
 
@@ -67,17 +57,13 @@ def product_page_catalog_loop(driver, page_limit, review_page_limit):
         product_data = get_product_data(driver, review_page_limit)
 
         if product_data:
-            print('PROD DATA: ')
-            print(len(product_data['reviews']))
-            print(len(product_data['images']))
-            print(len(product_data['prices']))
-
             data['reviews'] = data['reviews'] + product_data['reviews']
             data['images'] = data['images'] + product_data['images']
             data['prices'] = data['prices'] + product_data['prices']
 
         # Navigate to next page
-        deca_load(driver, url, 10)
+        # driver.get(url)
+        Tools.load_page(driver, url, 30)
 
         next_button = get_next_button(driver)
 
@@ -89,6 +75,11 @@ def product_page_catalog_loop(driver, page_limit, review_page_limit):
         url = driver.current_url
 
         page_counter += 1
+
+    driver.close()
+
+    print('DECA SCRAPE END')
+    get_scraped_data_size_info(data)
 
     return data
 
@@ -131,7 +122,7 @@ def get_catalog_soup(driver):
 
 
 def check_next(driver, link):
-    driver.get(link)
+    Tools.load_page(driver, link, 30)
 
     time.sleep(1)
 
@@ -169,10 +160,6 @@ def product_loop(driver, current_page_soup, review_page_limit):
         except:
             print('ERROR WHILE RETRIEVING DATA')
 
-        print('PAGE AMOUNT OF IMAGES COLLECTED: ' + str(
-            len(data['images'])) + " | PAGE AMOUNT OF REVIEWS COLLECTED: " + str(
-            len((data['reviews']))))
-
     return data
 
 
@@ -186,10 +173,9 @@ def p_s(driver, prod_soup, review_page_limit):
     link = f"https://www.decathlon.nl/{product_link}"
 
     # Get product images
-    print('DRIVER GET: ' + link)
     time.sleep(0.5)
 
-    deca_load(driver, link, 10)
+    Tools.load_page(driver, link, 30)
 
     time.sleep(1)
 
@@ -198,7 +184,7 @@ def p_s(driver, prod_soup, review_page_limit):
     # Get product reviews
     review_link = link.replace("nl//p/", "nl/r/")
 
-    deca_load(driver, review_link, 10)
+    Tools.load_page(driver, review_link, 30)
     time.sleep(1)
 
     data['reviews'] = data['reviews'] + parse_all_reviews(driver, review_page_limit)

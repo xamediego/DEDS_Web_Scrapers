@@ -1,6 +1,7 @@
 import csv
 import os
 import requests
+from selenium.common import TimeoutException
 
 
 def save_images_to_folder(image_urls, folder_path):
@@ -20,10 +21,16 @@ def save_images_to_folder(image_urls, folder_path):
 
 
 def add_data(d1, d2):
-    data = {'reviews': d1['reviews'] + d2['reviews'], 'images': d1['images'] + d2['images'],
-            'prices': d1['prices'] + d2['prices']}
+    print('ADD')
+    get_scraped_data_size_info(d2)
+    print('ADD TO')
+    get_scraped_data_size_info(d1)
+    d1['reviews'] = d1['reviews'] + d2['reviews']
+    d1['images'] = d1['images'] + d2['images']
+    d1['prices'] = d1['prices'] + d2['prices']
+    print('ADDED TO TOTAL')
+    get_scraped_data_size_info(d1)
 
-    return data
 
 
 def get_scraped_data_size_info(scraped_date):
@@ -81,3 +88,15 @@ def clear_folder(folder_path):
             os.remove(item_path)
         elif os.path.isdir(item_path):
             os.rmdir(item_path)
+
+
+def load_page(driver, link, load_time):
+    driver.set_page_load_timeout(load_time)
+
+    try:
+        driver.get(link)
+        # continue with the next steps
+    except TimeoutException as e:
+        print("Page load Timeout Occurred. Refreshing !!!")
+        print(link)
+        driver.refresh()

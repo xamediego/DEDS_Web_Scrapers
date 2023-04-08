@@ -5,6 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import time
 
+import Tools
 from Tools import get_scraped_data_size_info
 
 
@@ -18,18 +19,14 @@ def sel_scrape_amazon(search_term, page_limit):
     data = {"reviews": [], "images": [], 'prices': []}
 
     driver = webdriver.Edge()
+    driver.set_window_size(1600, 1000)
 
-    # lmfao
-    try:
-        initial_navigation(driver, search_term)
-    except:
-        initial_navigation(driver, search_term)
+    initial_navigation(driver, search_term, "https://www.amazon.nl")
 
     url = driver.current_url
-    page_counter = 0;
+    page_counter = 0
 
     while (page_counter != page_limit) & (check_next(driver, url)):
-
 
         url = get_next_url(driver)
 
@@ -39,24 +36,22 @@ def sel_scrape_amazon(search_term, page_limit):
 
         data['prices'] = data['prices'] + get_prices(driver)
 
-        get_scraped_data_size_info(data)
-
         page_counter += 1
+
+    driver.close()
+
+    print('AMAZON SCRAPE END')
+    get_scraped_data_size_info(data)
 
     return data
 
 
-def initial_navigation(driver, search_term):
+def initial_navigation(driver, search_term, site_link):
     search_box = []
 
-    while len(search_box) < 1:
-        driver.get("https://www.amazon.nl")
+    Tools.load_page(driver, site_link, 30)
 
-        time.sleep(1)
-
-        search_box = driver.find_elements(By.ID, "twotabsearchtextbox")
-
-    search_box = WebDriverWait(driver, 10).until(
+    search_box = WebDriverWait(driver, 30).until(
         EC.presence_of_element_located((By.ID, "twotabsearchtextbox"))
     )
 
@@ -65,7 +60,7 @@ def initial_navigation(driver, search_term):
     search_button = driver.find_element(By.XPATH, "//input[@type='submit']")
     search_button.click()
 
-    category_dropdown = WebDriverWait(driver, 10).until(
+    category_dropdown = WebDriverWait(driver, 30).until(
         EC.presence_of_element_located((By.ID, "searchDropdownBox"))
     )
 
@@ -77,9 +72,9 @@ def initial_navigation(driver, search_term):
 
     alles_check_box = driver.find_elements(By.CSS_SELECTOR, 'li[aria-label="Alles"]')
     alles_link = alles_check_box[0].find_elements(By.CSS_SELECTOR, 'a')
-    l = alles_link[0].get_attribute('href')
+    link = alles_link[0].get_attribute('href')
 
-    driver.get(l)
+    Tools.load_page(driver, link, 30)
 
     time.sleep(1)
 
@@ -128,7 +123,7 @@ def parse_page(driver, soup_result):
 
 
 def check_next(driver, link):
-    driver.get(link)
+    Tools.load_page(driver, link, 30)
 
     time.sleep(1)
 
@@ -149,7 +144,7 @@ def get_data(driver, product_url):
     reviews = []
     images = []
 
-    driver.get(product_url)
+    Tools.load_page(driver, product_url, 30)
 
     time.sleep(1)
 
@@ -160,7 +155,6 @@ def get_data(driver, product_url):
             review = review_element.find_element(By.CSS_SELECTOR, 'span[data-hook="review-body"]')
 
             review_text = review.text
-            print(review_text)
 
             reviews.append(review_text)
     except:

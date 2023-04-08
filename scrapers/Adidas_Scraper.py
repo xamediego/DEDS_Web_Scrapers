@@ -3,6 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
+import Tools
 from Tools import get_scraped_data_size_info
 
 
@@ -15,7 +16,7 @@ def scrape_full(search_term, page_limit):
 def initial_navigation(driver, site_url, search_term):
     url = site_url + search_term
 
-    driver.get(url)
+    Tools.load_page(driver, url, 40)
 
     time.sleep(1)
 
@@ -32,6 +33,7 @@ def scraper(search_term, page_limit):
     data = {'reviews': [], 'images': [], 'prices': []}
 
     driver = webdriver.Edge()
+    driver.set_window_size(1600, 1000)
 
     initial_navigation(driver, 'https://www.adidas.nl/search?q=', search_term)
 
@@ -53,9 +55,12 @@ def scraper(search_term, page_limit):
 
         data['prices'] = data['prices'] + get_prices(driver)
 
-        get_scraped_data_size_info(data)
-
         page_counter += 1
+
+    driver.close()
+
+    print('ADIDAS SCRAPE END')
+    get_scraped_data_size_info(data)
 
     return data
 
@@ -75,7 +80,7 @@ def prod_page(driver):
             product_href.append(url)
 
         for link in product_href:
-            driver.get(link)
+            Tools.load_page(driver, link, 40)
 
             time.sleep(2)
 
@@ -106,7 +111,7 @@ def prod_page(driver):
                 except:
                     print('ERROR IN AD IN RWB LOOP')
 
-                open_lees_meer(driver)
+                open_lees_meer(driver, 0)
 
                 review_articles = driver.find_elements(By.CSS_SELECTOR, 'article.review___3M74F.gl-vspace-bpall-medium')
 
@@ -135,7 +140,7 @@ def get_prices(driver):
 
 
 def check_next(driver, link):
-    driver.get(link)
+    Tools.load_page(driver, link, 30)
 
     time.sleep(5)
 
@@ -162,7 +167,10 @@ def get_images(driver):
         images_holder = images_div[0].find_elements(By.CSS_SELECTOR, 'img')
 
         for x in range(0, 4):
-            images.append(images_holder[x].get_attribute('src'))
+            img_link = images_holder[x].get_attribute('src')
+            if img_link:
+                print(img_link)
+                images.append(img_link)
 
     return images
 
@@ -197,14 +205,15 @@ def parse_review(review_article):
         return review_text
 
 
-def open_lees_meer(driver):
+def open_lees_meer(driver, old_button):
     reviews_div = driver.find_elements(By.CSS_SELECTOR, 'div.reviews___3fzxE')
 
     if len(reviews_div) > 0:
         lees_meer_button = reviews_div[0].find_elements(By.CSS_SELECTOR, 'button[data-auto-id="ratings-load-more"]')
 
         if len(lees_meer_button) > 0:
-            for l_m_b in lees_meer_button:
+            l_m_b = lees_meer_button[0]
+            if l_m_b != old_button:
                 try:
                     time.sleep(0.2)
 
@@ -212,9 +221,7 @@ def open_lees_meer(driver):
 
                     time.sleep(0.3)
 
-                    open_lees_meer(driver)
-
-                    break
+                    open_lees_meer(driver, lees_meer_button)
                 except:
                     print('LMB Message: element not interactable')
 
