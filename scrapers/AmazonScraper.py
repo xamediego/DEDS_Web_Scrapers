@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -9,13 +10,13 @@ import Tools
 from Tools import get_scraped_data_size_info
 
 
-def scrape_full(search_term, page_limit):
-    amazon_data = sel_scrape_amazon(search_term, page_limit)
+def scrape_full(search_term, page_limit, review_page_limit):
+    amazon_data = sel_scrape_amazon(search_term, page_limit, review_page_limit)
 
     return amazon_data
 
 
-def sel_scrape_amazon(search_term, page_limit):
+def sel_scrape_amazon(search_term, page_limit, review_page_limit):
     data = {"reviews": [], "images": [], 'prices': [], 'titles': []}
 
     driver = webdriver.Edge()
@@ -27,9 +28,12 @@ def sel_scrape_amazon(search_term, page_limit):
     page_counter = 0
 
     while (page_counter != page_limit) & (check_next(driver, url)):
+        driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
+        time.sleep(1)
+
         url = get_next_url(driver)
 
-        r_data = prod_page(driver)
+        r_data = prod_page(driver, review_page_limit)
         data['reviews'] = data['reviews'] + r_data['reviews']
         data['images'] = data['images'] + r_data['images']
 
@@ -103,7 +107,7 @@ def get_titles(driver):
     return titles
 
 
-def prod_page(driver):
+def prod_page(driver, review_page_limit):
     search_results = driver.find_elements(By.CSS_SELECTOR, 'div[data-component-type="s-search-result"]')
 
     soup_result = []
@@ -112,10 +116,10 @@ def prod_page(driver):
         html = result.get_attribute('innerHTML')
         soup_result.append(BeautifulSoup(html, 'html.parser'))
 
-    return parse_page(driver, soup_result)
+    return parse_page(driver, soup_result, review_page_limit)
 
 
-def parse_page(driver, soup_result):
+def parse_page(driver, soup_result, review_page_limit):
     data = {"reviews": [], "images": []}
 
     for result in soup_result:
@@ -123,13 +127,10 @@ def parse_page(driver, soup_result):
 
         p_link = 'https://www.amazon.nl' + a_tag['href']
 
-        try:
-            r_data = get_data(driver, p_link)
+        r_data = get_data(driver, p_link, review_page_limit)
 
-            data['reviews'] = data['reviews'] + r_data['reviews']
-            data['images'] = data['images'] + r_data['images']
-        except:
-            print('ERROR WHILE GETTING DATA')
+        data['reviews'] = data['reviews'] + r_data['reviews']
+        data['images'] = data['images'] + r_data['images']
 
     return data
 
@@ -152,32 +153,90 @@ def get_next_url(driver):
     return search_result.get_attribute('href')
 
 
-def get_data(driver, product_url):
-    reviews = []
+def get_data(driver, product_url, review_page_limit):
     images = []
 
     Tools.load_page(driver, product_url, 30)
 
+    driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
     time.sleep(1)
-
-    review_elements = driver.find_elements(By.CSS_SELECTOR, 'div[data-hook="review"]')
-
-    try:
-        for review_element in review_elements:
-            review = review_element.find_element(By.CSS_SELECTOR, 'span[data-hook="review-body"]')
-
-            review_text = review.text
-
-            reviews.append(review_text)
-    except:
-        print('ERROR WHILE PARSING REVIEW')
 
     image_elements = driver.find_elements(By.CSS_SELECTOR, 'img.a-dynamic-image')
 
-    try:
-        for image_element in image_elements:
-            images.append(image_element.get_attribute("src"))
-    except:
-        print('ERROR WHILE PARSING SRC')
+
+    for image_element in image_elements:
+        images.append(image_element.get_attribute("src"))
+
+
+    reviews = get_all_reviews(driver, review_page_limit)
 
     return {"reviews": reviews, "images": images}
+
+
+def get_all_reviews(driver, review_page_limit):
+    reviews = []
+
+    more_reviews_link = driver.find_elements(By.CSS_SELECTOR, 'a[data-hook="see-all-reviews-link-foot"]')
+
+    if len(more_reviews_link) > 0:
+        more_reviews_link[0].click()
+
+        try_translate(driver)
+        page_count = 0
+
+        while (page_count == review_page_limit) & (check_review_next(driver)):
+
+            try_translate(driver)
+
+            review_elements = driver.find_elements(By.CSS_SELECTOR, 'span[data-hook="review-body"]')
+
+            for review in review_elements:
+                review_text = review.text
+
+                print(review_text)
+
+                reviews.append(review_text)
+
+            next_link = get_next_review_link(driver)
+            next_link.click()
+            time.sleep(8)
+            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
+            time.sleep(1)
+
+            page_count += 1
+
+    return reviews
+
+
+def try_translate(driver):
+    translate_link_a = driver.find_elements(By.CSS_SELECTOR, 'a[data-hook="cr-translate-these-reviews-link"]')
+    if len(translate_link_a) > 0:
+        try:
+            translate_link_a[0].click()
+            time.sleep(15)
+        except:
+            print('ERROR WHILE PRESSING TRANSLATE BUTTON')
+
+
+def check_review_next(driver):
+    pagination = driver.find_elements(By.CSS_SELECTOR, 'ul.a-pagination')
+
+    if len(pagination) > 0:
+        next_line_button = pagination[0].find_elements(By.CSS_SELECTOR, 'li.a-last')
+
+        next_line_link = next_line_button[0].find_elements(By.CSS_SELECTOR, 'a')
+
+        return len(next_line_link) > 0
+
+    return False
+
+
+def get_next_review_link(driver):
+    pagination = driver.find_elements(By.CSS_SELECTOR, 'ul.a-pagination')
+
+    if len(pagination) > 0:
+        next_line_button = pagination[0].find_elements(By.CSS_SELECTOR, 'li.a-last')
+
+        next_line_link = next_line_button[0].find_elements(By.CSS_SELECTOR, 'a')
+
+        return next_line_link[0]
