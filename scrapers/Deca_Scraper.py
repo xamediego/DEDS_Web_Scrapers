@@ -43,7 +43,7 @@ def start_scraper(search_value, page_limit, review_page_limit):
 
 
 def product_page_catalog_loop(driver, page_limit, review_page_limit):
-    data = {'reviews': [], 'images': [], 'prices': []}
+    data = {'reviews': [], 'images': [], 'prices': [], 'titles' : []}
 
     page_counter = 0
     url = driver.current_url
@@ -60,7 +60,7 @@ def product_page_catalog_loop(driver, page_limit, review_page_limit):
             data['reviews'] = data['reviews'] + product_data['reviews']
             data['images'] = data['images'] + product_data['images']
             data['prices'] = data['prices'] + product_data['prices']
-
+            data['titles'] = data['titles'] + product_data['titles']
         # Navigate to next page
         # driver.get(url)
         Tools.load_page(driver, url, 30)
@@ -85,7 +85,7 @@ def product_page_catalog_loop(driver, page_limit, review_page_limit):
 
 
 def get_product_data(driver, review_page_limit):
-    data = {'reviews': [], 'images': [], 'prices': []}
+    data = {'reviews': [], 'images': [], 'prices': [], 'titles' : []}
 
     # Get review/images from item page
 
@@ -103,6 +103,18 @@ def get_product_data(driver, review_page_limit):
 
     return data
 
+def get_titles(driver):
+    titles = []
+
+    product_tiles = driver.find_elements(By.CSS_SELECTOR, 'div.vtmn-flex.vtmn-flex-col.vtmn-items-center.vtmn-relative.vtmn-overflow-hidden.vtmn-text-center.vtmn-z-0.dpb-holder.svelte-2ckipo')
+
+    for product in product_tiles:
+        title_span = product.find_elements(By.CSS_SELECTOR, 'h2.vtmn-p-0.vtmn-m-0.vtmn-text-sm.vtmn-font-normal.vtmn-overflow-hidden.vtmn-text-ellipsis.svelte-1l3biyf')
+
+        if len(title_span) > 0:
+            titles.append(title_span[0].text)
+
+    return titles
 
 def get_prices(driver):
     prices = []

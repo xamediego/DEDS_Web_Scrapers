@@ -16,7 +16,7 @@ def scrape_full(search_term, page_limit):
 
 
 def sel_scrape_amazon(search_term, page_limit):
-    data = {"reviews": [], "images": [], 'prices': []}
+    data = {"reviews": [], "images": [], 'prices': [], 'titles': []}
 
     driver = webdriver.Edge()
     driver.set_window_size(1600, 1000)
@@ -27,7 +27,6 @@ def sel_scrape_amazon(search_term, page_limit):
     page_counter = 0
 
     while (page_counter != page_limit) & (check_next(driver, url)):
-
         url = get_next_url(driver)
 
         r_data = prod_page(driver)
@@ -35,6 +34,7 @@ def sel_scrape_amazon(search_term, page_limit):
         data['images'] = data['images'] + r_data['images']
 
         data['prices'] = data['prices'] + get_prices(driver)
+        data['titles'] = data['titles'] + get_titles(driver)
 
         page_counter += 1
 
@@ -47,8 +47,6 @@ def sel_scrape_amazon(search_term, page_limit):
 
 
 def initial_navigation(driver, search_term, site_link):
-    search_box = []
-
     Tools.load_page(driver, site_link, 30)
 
     search_box = WebDriverWait(driver, 30).until(
@@ -79,7 +77,6 @@ def initial_navigation(driver, search_term, site_link):
     time.sleep(1)
 
 
-
 def get_prices(driver):
     prices = []
 
@@ -89,6 +86,21 @@ def get_prices(driver):
         prices.append(price.text)
 
     return prices
+
+
+def get_titles(driver):
+    titles = []
+
+    product_tiles = driver.find_elements(By.CSS_SELECTOR, 'div[data-component-type="s-search-result"]')
+
+    for products in product_tiles:
+
+        titles_span = products.find_elements(By.CSS_SELECTOR, 'span.a-size-base-plus.a-color-base.a-text-normal')
+
+        if len(titles_span) > 0:
+            titles.append(titles_span[0].text)
+
+    return titles
 
 
 def prod_page(driver):

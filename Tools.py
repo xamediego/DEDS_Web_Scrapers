@@ -28,6 +28,7 @@ def add_data(d1, d2):
     d1['reviews'] = d1['reviews'] + d2['reviews']
     d1['images'] = d1['images'] + d2['images']
     d1['prices'] = d1['prices'] + d2['prices']
+    d1['titles'] = d1['titles'] + d2['titles']
     print('ADDED TO TOTAL')
     get_scraped_data_size_info(d1)
 
@@ -37,9 +38,11 @@ def get_scraped_data_size_info(scraped_date):
     r_l = len(scraped_date['reviews'])
     i_l = len(scraped_date['images'])
     p_l = len(scraped_date['prices'])
+    t_l = len(scraped_date['titles'])
     print(f'Amount of reviews collected: {r_l}')
     print(f'Amount of images collected: {i_l}')
     print(f'Amount of prices collected: {p_l}')
+    print(f'Amount of titles collected: {t_l}')
 
 
 def write_csv(data, filename):

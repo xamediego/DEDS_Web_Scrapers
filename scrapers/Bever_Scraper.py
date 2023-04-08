@@ -13,7 +13,7 @@ def scrape_full(search_term, page_limit):
 
 
 def scraper(search_value, page_limit):
-    data = {'reviews': [], 'images': [], 'prices': []}
+    data = {'reviews': [], 'images': [], 'prices': [], 'titles': []}
 
     driver = webdriver.Edge()
     driver.set_window_size(1600, 1000)
@@ -24,7 +24,6 @@ def scraper(search_value, page_limit):
     page_counter = 0
 
     while (page_counter != page_limit) & (check_next(driver, url)):
-
         url = get_next_url(driver)
 
         click_consent_button(driver)
@@ -34,6 +33,8 @@ def scraper(search_value, page_limit):
         data['prices'] = data['prices'] + r_data['prices']
         data['images'] = data['images'] + r_data['images']
 
+        data['titles'] = data['titles'] + get_titles(driver)
+
         page_counter += 1
 
     driver.close()
@@ -42,6 +43,19 @@ def scraper(search_value, page_limit):
     get_scraped_data_size_info(data)
 
     return data
+
+
+def get_titles(driver):
+    titles = []
+
+    product_tiles = driver.find_elements(By.CSS_SELECTOR, 'div.as-t-product-grid__item')
+
+    for product in product_tiles:
+        title_span = product.find_elements(By.CSS_SELECTOR, 'span.as-a-text.as-m-product-tile__name')
+        if len(title_span) > 0:
+            titles.append(title_span[0].text)
+
+    return titles
 
 
 def prod_page(driver):

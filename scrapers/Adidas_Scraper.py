@@ -30,7 +30,7 @@ def click_consent_button(driver):
 
 
 def scraper(search_term, page_limit):
-    data = {'reviews': [], 'images': [], 'prices': []}
+    data = {'reviews': [], 'images': [], 'prices': [], 'titles': []}
 
     driver = webdriver.Edge()
     driver.set_window_size(1600, 1000)
@@ -44,7 +44,6 @@ def scraper(search_term, page_limit):
     page_counter = 0
 
     while (page_counter != page_limit) & (check_next(driver, url)):
-
         close_account_portal(driver)
 
         url = get_next_url(driver)
@@ -54,6 +53,7 @@ def scraper(search_term, page_limit):
         data['images'] = data['images'] + r_data['images']
 
         data['prices'] = data['prices'] + get_prices(driver)
+        data['titles'] = data['titles'] + get_titles(driver)
 
         page_counter += 1
 
@@ -97,7 +97,8 @@ def prod_page(driver):
             open_review_div = driver.find_elements(By.ID, 'navigation-target-reviews')
 
             if len(open_review_div) > 0:
-                open_review_button = open_review_div[0].find_elements(By.CSS_SELECTOR, 'button.accordion__header___3Pii5')
+                open_review_button = open_review_div[0].find_elements(By.CSS_SELECTOR,
+                                                                      'button.accordion__header___3Pii5')
 
                 data['images'] = data['images'] + get_images(driver)
 
@@ -137,6 +138,20 @@ def get_prices(driver):
         prices.append(cleaned_price)
 
     return prices
+
+
+def get_titles(driver):
+    titles = []
+
+    product_tiles = driver.find_elements(By.CSS_SELECTOR, 'div.glass-product-card-container')
+
+    for product in product_tiles:
+        title_span = product.find_elements(By.CSS_SELECTOR, 'p.glass-product-card__title')
+
+        if len(title_span) > 0:
+            titles.append(title_span[0].text)
+
+    return titles
 
 
 def check_next(driver, link):

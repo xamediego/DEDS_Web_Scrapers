@@ -9,7 +9,7 @@ from scrapers import Bol_Sel as Bs, AmazonScraper as Ama, Deca_Scraper as Deca, 
 
 
 def scrape_data_all():
-    scraped_date = {'reviews': [], 'images': [], 'prices': []}
+    scraped_date = {'reviews': [], 'images': [], 'prices': [], 'titles': []}
     print(scraped_date['images'])
     search_term = 'jassen'
 
@@ -36,7 +36,6 @@ def scrape_data_all():
     time.sleep(5)
     # deca_thread.start()
 
-
     # Wait for all threads to complete
     # bever_thread.join()
     adidas_thread.join()
@@ -50,7 +49,7 @@ def scrape_data_all():
     print(scraped_date['images'])
     test(scraped_date['images'])
     # print("Write reviews to txt and save images")
-    save_data(cleaned_data, scraped_date['images'], scraped_date['prices'])
+    save_data(cleaned_data, scraped_date['images'], scraped_date['titles'], scraped_date['prices'])
 
     # print("Upload stuff to hadoop")
     # upload_to_hadoop()
@@ -62,17 +61,16 @@ def clear_image_folder():
     Tools.clear_folder(source_path_images)
 
 
-def save_data(cleaned_reviews, images, cleaned_prices):
+def save_data(cleaned_reviews, images, titles, cleaned_prices):
     folder_path_review = "submit/reviews/textbestand.txt"
     folder_path_prices = "submit/prices/textbestand.txt"
+    folder_path_titles = "submit/titles/textbestand.txt"
     folder_path_image_links = "submit/image_links/textbestand.txt"
-
-    image_links = images.copy()
 
     Tools.write_array_to_file(cleaned_reviews, folder_path_review)
     Tools.write_array_to_file(cleaned_prices, folder_path_prices)
-    Tools.write_array_to_file(image_links, folder_path_image_links)
-
+    Tools.write_array_to_file(titles, folder_path_titles)
+    Tools.write_array_to_file(images, folder_path_image_links)
 
 
 def test(images):
@@ -85,14 +83,17 @@ def upload_to_hadoop():
     source_path_review = "submit/reviews/."
     source_path_prices = "submit/prices/."
     source_path_images = "submit/images/."
+    source_path_titles = "submit/titles/."
 
     des_path_review = "/input/reviews/"
     des_path_prices = "/input/prices/"
     des_path_images = "/input/images/"
+    des_path_titles = "/input/titles/"
 
     MakeTool.upload(source_path_review, des_path_review)
     MakeTool.upload(source_path_prices, des_path_prices)
     MakeTool.upload(source_path_images, des_path_images)
+    MakeTool.upload(source_path_titles, des_path_titles)
 
     clear_image_folder()
 
