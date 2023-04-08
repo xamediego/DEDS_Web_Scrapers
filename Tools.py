@@ -1,6 +1,5 @@
 import csv
 import os
-import subprocess
 import requests
 
 
@@ -21,12 +20,19 @@ def save_images_to_folder(image_urls, folder_path):
 
 
 def add_data(d1, d2):
-    data = {'reviews': [], 'images': []}
-
-    data['reviews'] = d1['reviews'] + d2['reviews']
-    data['images'] = d1['images'] + d2['images']
+    data = {'reviews': d1['reviews'] + d2['reviews'], 'images': d1['images'] + d2['images'],
+            'prices': d1['prices'] + d2['prices']}
 
     return data
+
+
+def get_scraped_data_size_info(scraped_date):
+    r_l = len(scraped_date['reviews'])
+    i_l = len(scraped_date['images'])
+    p_l = len(scraped_date['prices'])
+    print(f'Amount of reviews collected: {r_l}')
+    print(f'Amount of images collected: {i_l}')
+    print(f'Amount of prices collected: {p_l}')
 
 
 def write_csv(data, filename):
@@ -62,7 +68,16 @@ def remove_unicode(data):
 
 
 def write_array_to_file(arr, file_path):
-    with open(file_path, 'x') as file:
+    with open(file_path, 'w') as file:
         # Write each row of data to the text file
         for row in arr:
             file.write(row + '\n')
+
+
+def clear_folder(folder_path):
+    for item in os.listdir(folder_path):
+        item_path = os.path.join(folder_path, item)
+        if os.path.isfile(item_path):
+            os.remove(item_path)
+        elif os.path.isdir(item_path):
+            os.rmdir(item_path)

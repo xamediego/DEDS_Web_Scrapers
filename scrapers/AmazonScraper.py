@@ -3,42 +3,58 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+import time
+
+from Tools import get_scraped_data_size_info
 
 
-def scrape_full(search_term):
-    print('Amazon scrape')
-    amazon_data = sel_scrape_amazon(search_term)
+def scrape_full(search_term, page_limit):
+    amazon_data = sel_scrape_amazon(search_term, page_limit)
 
     return amazon_data
 
 
-def sel_scrape_amazon(search_term):
-    data = {"reviews": [], "images": []}
+def sel_scrape_amazon(search_term, page_limit):
+    data = {"reviews": [], "images": [], 'prices': []}
 
     driver = webdriver.Edge()
 
-    initial_navigation(driver, search_term)
+    # lmfao
+    try:
+        initial_navigation(driver, search_term)
+    except:
+        initial_navigation(driver, search_term)
 
     url = driver.current_url
+    page_counter = 0;
 
-    r_data = prod_page(driver)
+    while (page_counter != page_limit) & (check_next(driver, url)):
 
-    data['reviews'] = data['reviews'] + r_data['reviews']
-    data['images'] = data['images'] + r_data['images']
 
-    # while check_next(driver, url):
-    #     url = get_next_url(driver)
-    #
-    #     r_data = prod_page(driver)
-    #
-    #     data['reviews'] = data['reviews'] + r_data['reviews']
-    #     data['images'] = data['images'] + r_data['images']
+        url = get_next_url(driver)
+
+        r_data = prod_page(driver)
+        data['reviews'] = data['reviews'] + r_data['reviews']
+        data['images'] = data['images'] + r_data['images']
+
+        data['prices'] = data['prices'] + get_prices(driver)
+
+        get_scraped_data_size_info(data)
+
+        page_counter += 1
 
     return data
 
 
 def initial_navigation(driver, search_term):
-    driver.get("https://www.amazon.nl")
+    search_box = []
+
+    while len(search_box) < 1:
+        driver.get("https://www.amazon.nl")
+
+        time.sleep(1)
+
+        search_box = driver.find_elements(By.ID, "twotabsearchtextbox")
 
     search_box = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.ID, "twotabsearchtextbox"))
@@ -56,6 +72,28 @@ def initial_navigation(driver, search_term):
     category_dropdown.send_keys("Kleding, schoenen en sieraden")
 
     search_box.submit()
+
+    time.sleep(1)
+
+    alles_check_box = driver.find_elements(By.CSS_SELECTOR, 'li[aria-label="Alles"]')
+    alles_link = alles_check_box[0].find_elements(By.CSS_SELECTOR, 'a')
+    l = alles_link[0].get_attribute('href')
+
+    driver.get(l)
+
+    time.sleep(1)
+
+
+
+def get_prices(driver):
+    prices = []
+
+    span_prices = driver.find_elements(By.CSS_SELECTOR, 'span.a-price-whole')
+
+    for price in span_prices:
+        prices.append(price.text)
+
+    return prices
 
 
 def prod_page(driver):
@@ -92,6 +130,8 @@ def parse_page(driver, soup_result):
 def check_next(driver, link):
     driver.get(link)
 
+    time.sleep(1)
+
     search_result = driver.find_elements(By.CSS_SELECTOR,
                                          "a.s-pagination-item.s-pagination-next.s-pagination-button.s-pagination-separator")
 
@@ -110,6 +150,8 @@ def get_data(driver, product_url):
     images = []
 
     driver.get(product_url)
+
+    time.sleep(1)
 
     review_elements = driver.find_elements(By.CSS_SELECTOR, 'div[data-hook="review"]')
 

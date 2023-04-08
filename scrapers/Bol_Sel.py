@@ -1,31 +1,43 @@
+import time
+
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
+from Tools import get_scraped_data_size_info
 
-def scrape_full(search_term, bol_category):
-    bol_data = scraper(search_term, bol_category)
+
+def scrape_full(search_term, bol_category, page_limit):
+    bol_data = scraper(search_term, bol_category, page_limit)
 
     return bol_data
 
 
-def scraper(search_value, selected_category):
-    data = {'reviews': [], 'images': []}
+def scraper(search_value, selected_category, page_limit):
+    data = {'reviews': [], 'images': [], 'prices': []}
 
     driver = webdriver.Edge()
 
     initial_navigation(driver, 'https://www.bol.com/nl/nl/s/', search_value, selected_category, 'Kleding')
 
     url = driver.current_url
+    page_counter = 0
 
-    while check_next(driver, url):
+    while (page_counter != page_limit) & (check_next(driver, url)):
+
         url = get_next_url(driver)
 
         r_data = prod_page(driver)
-
         data['reviews'] = data['reviews'] + r_data['reviews']
         data['images'] = data['images'] + r_data['images']
+
+
+        data['prices'] = data['prices'] + get_prices(driver)
+
+        get_scraped_data_size_info(data)
+
+        page_counter += 1
 
     return data
 
@@ -40,15 +52,27 @@ def initial_navigation(driver, site_url, search_value, selected_category, sub_ca
 
     driver.get(response.url)
 
+    time.sleep(1)
+
     click_consent_button(driver)
 
     categorized_link = get_category_link(driver, selected_category)
 
     driver.get(categorized_link)
 
+    time.sleep(1)
+
     categorized_link = get_category_link(driver, sub_category)
 
     driver.get(categorized_link)
+
+    time.sleep(1)
+
+    categorized_link = get_category_link(driver, 'Jassen')
+
+    driver.get(categorized_link)
+
+    time.sleep(1)
 
 
 def get_category_link(driver, selected_category):
@@ -98,6 +122,8 @@ def parse_page(driver, soup_result):
 def get_data(driver, product_url, old_reviews):
     driver.get(product_url)
 
+    time.sleep(1)
+
     reviews = scrape_review_bodies(driver, old_reviews)
     images = scrape_image_links(driver)
 
@@ -128,7 +154,6 @@ def get_review_bodies(review_container, old_reviews):
             review_text = str(r_body.text.strip())
 
             if review_text not in old_reviews:
-                print(review_text)
                 reviews.append(review_text)
 
     return reviews
@@ -156,14 +181,26 @@ def get_image_links(product_image_ref):
         src = img.get('src')
 
         if src not in images:
-            print(src)
             images.append(src)
 
     return images
 
 
+def get_prices(driver):
+    prices = []
+
+    price_spans = driver.find_elements(By.CSS_SELECTOR, 'span[data-test="price"]')
+
+    for price in price_spans:
+        prices.append(price.text)
+
+    return prices
+
+
 def check_next(driver, link):
     driver.get(link)
+
+    time.sleep(1)
 
     search_result = driver.find_elements(By.CSS_SELECTOR, 'a[aria-label="volgende"]')
 

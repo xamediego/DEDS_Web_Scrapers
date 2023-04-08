@@ -3,47 +3,30 @@ import time
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.common import TimeoutException
+from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 
+import Tools
+from Tools import get_scraped_data_size_info
 
-def scrape_full(search_term):
+
+def scrape_full(search_term, page_limit, review_page_limit):
     print('Deca scrape')
-    deca_data = start_scraper(search_term)
+    deca_data = start_scraper(search_term, page_limit, review_page_limit)
 
     return deca_data
 
 
-def start_scraper(search_value):
-    data = {'reviews': [], 'images': []}
+def deca_load(driver, link, load_time):
+    driver.set_page_load_timeout(load_time)
 
-    driver = webdriver.Edge()
-
-    initial_navigation(driver, 'https://www.decathlon.nl/', search_value)
-
-    url = driver.current_url
-
-    while check_next(driver, url):
-        next_button = get_next_button(driver)
-
-        product_list = driver.find_element(By.CSS_SELECTOR, "div.product-list.pl-list.js-first.svelte-1wkvbov")
-
-        html = product_list.get_attribute('innerHTML')
-
-        product_soup = BeautifulSoup(html, 'html.parser')
-
-        r_data = product_loop(driver, product_soup)
-
-        data['reviews'] = data['reviews'] + r_data['reviews']
-        data['images'] = data['images'] + r_data['images']
-
-        driver.get(url)
-
-        next_button.click()
-        time.sleep(4)
-
-        url = driver.current_url
-
-    return data
+    try:
+        driver.get(link)
+        # continue with the next steps
+    except TimeoutException as e:
+        print("Page load Timeout Occurred. Refreshing !!!")
+        driver.refresh()
 
 
 def initial_navigation(driver, site_url, search_value):
@@ -54,13 +37,103 @@ def initial_navigation(driver, site_url, search_value):
 
     response = requests.get(site_url, headers=hdr, timeout=15)
 
-    driver.get(response.url)
+    deca_load(driver, response.url, 10)
+
+    time.sleep(1)
 
     click_consent_button(driver)
 
 
+def start_scraper(search_value, page_limit, review_page_limit):
+    driver = webdriver.Edge()
+
+    initial_navigation(driver, 'https://www.decathlon.nl/', search_value)
+
+    return product_page_catalog_loop(driver, page_limit, review_page_limit)
+
+
+def product_page_catalog_loop(driver, page_limit, review_page_limit):
+    data = {'reviews': [], 'images': [], 'prices': []}
+
+    page_counter = 0
+    url = driver.current_url
+
+    while (page_counter != page_limit) & (check_next(driver, url)):
+
+        driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
+        time.sleep(1)
+
+        # Get review/images from item page
+        product_data = get_product_data(driver, review_page_limit)
+
+        if product_data:
+            print('PROD DATA: ')
+            print(len(product_data['reviews']))
+            print(len(product_data['images']))
+            print(len(product_data['prices']))
+
+            data['reviews'] = data['reviews'] + product_data['reviews']
+            data['images'] = data['images'] + product_data['images']
+            data['prices'] = data['prices'] + product_data['prices']
+
+        # Navigate to next page
+        deca_load(driver, url, 10)
+
+        next_button = get_next_button(driver)
+
+        time.sleep(1)
+
+        next_button.click()
+        time.sleep(4)
+
+        url = driver.current_url
+
+        page_counter += 1
+
+    return data
+
+
+def get_product_data(driver, review_page_limit):
+    data = {'reviews': [], 'images': [], 'prices': []}
+
+    # Get review/images from item page
+
+    # Gets all prices on the catalog page
+    data['prices'] = data['prices'] + get_prices(driver)
+    product_soup = get_catalog_soup(driver)
+
+    # Loops trough all the products shown on the catalog page and adds obtained data
+    r_data = product_loop(driver, product_soup, review_page_limit)
+
+    data['reviews'] = data['reviews'] + r_data['reviews']
+    data['images'] = data['images'] + r_data['images']
+
+    get_scraped_data_size_info(data)
+
+    return data
+
+
+def get_prices(driver):
+    prices = []
+
+    span_prices = driver.find_elements(By.CSS_SELECTOR, 'span[aria-label="price"]')
+
+    for price in span_prices:
+        prices.append(price.text)
+
+    return prices
+
+
+def get_catalog_soup(driver):
+    product_list = driver.find_element(By.CSS_SELECTOR, "div.product-list.pl-list.js-first.svelte-1wkvbov")
+    html = product_list.get_attribute('innerHTML')
+    return BeautifulSoup(html, 'html.parser')
+
+
 def check_next(driver, link):
     driver.get(link)
+
+    time.sleep(1)
 
     search_result = driver.find_elements(By.CSS_SELECTOR, 'button[aria-label="Next product list page"]')
 
@@ -82,44 +155,116 @@ def click_consent_button(driver):
             break
 
 
-def product_loop(driver, current_page_soup):
-    scrape_data = {'reviews': [], 'images': []}
+def product_loop(driver, current_page_soup, review_page_limit):
+    data = {'reviews': [], 'images': [], 'prices': []}
 
     div_element = current_page_soup.find_all('div', {
         'class': 'product-block-top-main vtmn-flex vtmn-flex-col vtmn-items-center'})
 
     for prod_div in div_element:
-        scrape_data['reviews'] = scrape_data['reviews'] + p_s(driver, prod_div)
+        try:
+            p_data = p_s(driver, prod_div, review_page_limit)
+            data['reviews'] = data['reviews'] + p_data['reviews']
+            data['images'] = data['images'] + p_data['images']
+        except:
+            print('ERROR WHILE RETRIEVING DATA')
 
-    return scrape_data
+        print('PAGE AMOUNT OF IMAGES COLLECTED: ' + str(
+            len(data['images'])) + " | PAGE AMOUNT OF REVIEWS COLLECTED: " + str(
+            len((data['reviews']))))
+
+    return data
 
 
-def p_s(driver, prod_soup):
+def p_s(driver, prod_soup, review_page_limit):
+    data = {'reviews': [], 'images': []}
+
     link = prod_soup.find('a')
 
     product_link = link['href']
 
     link = f"https://www.decathlon.nl/{product_link}"
-    new_link = link.replace("nl//p/", "nl/r/")
 
-    driver.get(new_link)
+    # Get product images
+    print('DRIVER GET: ' + link)
+    time.sleep(0.5)
 
-    reviews = parse_all_reviews(driver)
+    deca_load(driver, link, 10)
 
-    return reviews
+    time.sleep(1)
+
+    data['images'] = data['images'] + get_images(driver)
+
+    # Get product reviews
+    review_link = link.replace("nl//p/", "nl/r/")
+
+    deca_load(driver, review_link, 10)
+    time.sleep(1)
+
+    data['reviews'] = data['reviews'] + parse_all_reviews(driver, review_page_limit)
+
+    print('AMOUNT OF IMAGES COLLECTED: ' + str(len(data['images'])) + " | AMOUNT OF REVIEWS COLLECTED: " + str(
+        len((data['reviews']))))
+
+    return data
 
 
-def parse_all_reviews(driver):
+def get_images(driver):
+    images = []
+
+    image_div = driver.find_elements(By.CSS_SELECTOR, 'div.product-images.svelte-175mzv1')
+
+    if len(image_div) > 0:
+        thumbnail_slider = driver.find_elements(By.ID, 'thumbnails-slider')
+        if len(thumbnail_slider) > 0:
+            thumbnail_buttons = thumbnail_slider[0].find_elements(By.CSS_SELECTOR, 'button')
+
+            for button in thumbnail_buttons:
+                button.click()
+                time.sleep(0.3)
+
+                image_section = image_div[0].find_elements(By.CSS_SELECTOR,
+                                                           'section.slide.fluid.dkt-item.svelte-qfug6k.snap.active')
+
+                if len(image_section) > 0:
+                    image_source = image_section[0].find_elements(By.CSS_SELECTOR, 'img')
+
+                    if len(image_source) > 0:
+                        image_link = image_source[0].get_attribute('src')
+                        images.append(image_link)
+
+    return images
+
+
+def check_next_image(driver):
+    search_result = driver.find_elements(By.CSS_SELECTOR, 'button[aria-label="Scroll down"]')
+    return len(search_result) > 0
+
+
+def get_next_image_button(driver):
+    next_button = driver.find_element(By.CSS_SELECTOR, 'button[aria-label="Scroll down"]')
+    return next_button
+
+
+def parse_all_reviews(driver, review_page_limit):
     reviews = []
 
+    review_page_count = 0
+
     while check_next_review(driver):
-        next_button = get_next_button_review(driver)
+        if review_page_count == review_page_limit: break
 
         reviews = reviews + get_reviews(driver)
 
+        next_button = get_next_button_review(driver)
         next_button.click()
 
-        time.sleep(0.01)
+        time.sleep(1)
+
+        driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
+        time.sleep(1)
+
+        review_page_count += 1
 
     return reviews
 
@@ -131,6 +276,7 @@ def get_reviews(driver):
 
     for p in paragraph_list:
         reviews.append(p.text)
+        time.sleep(0.1)
 
     return reviews
 
