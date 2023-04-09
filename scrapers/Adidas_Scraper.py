@@ -48,12 +48,12 @@ def scraper(search_term, page_limit):
 
         url = get_next_url(driver)
 
+        data['prices'] = data['prices'] + get_prices(driver)
+        data['titles'] = data['titles'] + get_titles(driver)
+
         r_data = prod_page(driver)
         data['reviews'] = data['reviews'] + r_data['reviews']
         data['images'] = data['images'] + r_data['images']
-
-        data['prices'] = data['prices'] + get_prices(driver)
-        data['titles'] = data['titles'] + get_titles(driver)
 
         page_counter += 1
 
@@ -133,7 +133,7 @@ def get_prices(driver):
 
     for price in span_prices:
         cleaned_price = price.text.replace("€", "")
-        cleaned_price = cleaned_price.text.replace(" ", "")
+        cleaned_price = cleaned_price.replace(" ", "")
 
         prices.append(cleaned_price)
 
@@ -182,6 +182,7 @@ def get_images(driver):
         images_holder = images_div[0].find_elements(By.CSS_SELECTOR, 'img')
 
         for x in range(0, 4):
+            if x == len(images_holder): break
             img_link = images_holder[x].get_attribute('src')
             if img_link:
                 print(img_link)
@@ -228,6 +229,11 @@ def open_lees_meer(driver, old_button):
 
         if len(lees_meer_button) > 0:
             l_m_b = lees_meer_button[0]
+
+            print(l_m_b != old_button)
+            print(l_m_b)
+            print(old_button)
+
             if l_m_b != old_button:
                 try:
                     time.sleep(0.2)
@@ -236,7 +242,7 @@ def open_lees_meer(driver, old_button):
 
                     time.sleep(0.3)
 
-                    open_lees_meer(driver, lees_meer_button)
+                    open_lees_meer(driver, l_m_b)
                 except:
                     print('LMB Message: element not interactable')
 

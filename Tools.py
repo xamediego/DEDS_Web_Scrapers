@@ -9,15 +9,16 @@ def save_images_to_folder(image_urls, folder_path):
 
     # Loop over each image URL
     for i, url in enumerate(image_urls):
-        # Get the image data from the URL
-        response = requests.get(url)
+        if url is not None:
+            # Get the image data from the URL
+            response = requests.get(url)
 
-        # Generate a unique filename for the image
-        filename = f"image_{i}.jpg"
+            # Generate a unique filename for the image
+            filename = f"image_{i}.jpg"
 
-        # Save the image to the folder
-        with open(os.path.join(folder_path, filename), "wb") as f:
-            f.write(response.content)
+            # Save the image to the folder
+            with open(os.path.join(folder_path, filename), "wb") as f:
+                f.write(response.content)
 
 
 def add_data(d1, d2):
@@ -31,7 +32,6 @@ def add_data(d1, d2):
     d1['titles'] = d1['titles'] + d2['titles']
     print('ADDED TO TOTAL')
     get_scraped_data_size_info(d1)
-
 
 
 def get_scraped_data_size_info(scraped_date):
@@ -81,7 +81,8 @@ def write_array_to_file(arr, file_path):
     with open(file_path, 'w') as file:
         # Write each row of data to the text file
         for row in arr:
-            file.write(row + '\n')
+            if row is not None:
+                file.write(row + '\n')
 
 
 def clear_folder(folder_path):

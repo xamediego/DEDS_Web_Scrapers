@@ -37,8 +37,14 @@ def sel_scrape_amazon(search_term, page_limit, review_page_limit):
         data['titles'] = data['titles'] + get_titles(driver)
 
         r_data = prod_page(driver, review_page_limit)
+        print('PRD')
+        print(r_data['reviews'])
+        print(r_data['images'])
         data['reviews'] = data['reviews'] + r_data['reviews']
         data['images'] = data['images'] + r_data['images']
+        print('PRD 2')
+        print(data['reviews'])
+        print(data['images'])
 
         page_counter += 1
 
@@ -128,10 +134,15 @@ def parse_page(driver, soup_result, review_page_limit):
         p_link = 'https://www.amazon.nl' + a_tag['href']
 
         r_data = get_data(driver, p_link, review_page_limit)
+        print('R_DATA REVIEWS')
+        print(r_data['reviews'])
 
         data['reviews'] = data['reviews'] + r_data['reviews']
         data['images'] = data['images'] + r_data['images']
 
+    print('DATA')
+    print(data['reviews'])
+    print(data['images'])
     return data
 
 
@@ -204,6 +215,9 @@ def get_all_reviews(driver, review_page_limit):
             time.sleep(1)
 
             page_count += 1
+
+    print('GOT REVIEWS')
+    print(reviews)
 
     return reviews
 

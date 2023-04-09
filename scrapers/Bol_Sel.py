@@ -16,7 +16,7 @@ def scrape_full(search_term, bol_category, page_limit):
 
 
 def scraper(search_value, selected_category, page_limit):
-    data = {'reviews': [], 'images': [], 'prices': [], 'titles': []}
+    data = {'reviews': [], 'images': [], 'prices': [], 'titles' : []}
 
     driver = webdriver.Edge()
     driver.set_window_size(1600, 1000)
@@ -29,12 +29,12 @@ def scraper(search_value, selected_category, page_limit):
     while (page_counter != page_limit) & (check_next(driver, url)):
         url = get_next_url(driver)
 
-        data['prices'] = data['prices'] + get_prices(driver)
-        data['titles'] = data['titles'] + get_titles(driver)
-
         r_data = prod_page(driver)
         data['reviews'] = data['reviews'] + r_data['reviews']
         data['images'] = data['images'] + r_data['images']
+
+        data['prices'] = data['prices'] + get_prices(driver)
+        data['titles'] = data['titles'] + get_titles(driver)
 
         page_counter += 1
 
@@ -45,21 +45,18 @@ def scraper(search_value, selected_category, page_limit):
 
     return data
 
-
 def get_titles(driver):
     titles = []
 
-    product_tiles = driver.find_elements(By.CSS_SELECTOR, 'div.product-item__content')
+    product_tiles = driver.find_elements(By.CSS_SELECTOR , 'div.product-item__content')
 
     for product in product_tiles:
-        title_a = product.find_elements(By.CSS_SELECTOR,
-                                        'a.product-title.px_list_page_product_click.list_page_product_tracking_target')
-
+        title_a = product.find_elements(By.CSS_SELECTOR , 'a.product-title.px_list_page_product_click.list_page_product_tracking_target')
         if len(title_a) > 0:
             titles.append(title_a[0].text)
 
-    return titles
 
+    return titles
 
 def initial_navigation(driver, site_url, search_value, selected_category, sub_category):
     hdr = {
@@ -183,19 +180,28 @@ def get_review_bodies(review_container, old_reviews):
 
 def scrape_image_links(driver):
     # Find the product image
-    product_image_div = driver.find_elements(By.CSS_SELECTOR, 'div[data-type="image"]')
+    product_image_ref = driver.find_elements(By.CSS_SELECTOR, 'img.js_selected_image.has-zoom')
 
-    images = []
+    soup_result = []
 
-    if len(product_image_div) > 0:
-        for image in product_image_div:
-            expected_images = image.find_elements(By.CSS_SELECTOR, 'img')
-            if len(expected_images) > 0:
-                for expected_image in expected_images:
-                    image_link = expected_image.get_attribute('src')
-                    images.append(image_link)
+    for result in product_image_ref:
+        html = result.get_attribute('innerHTML')
+        soup_result.append(BeautifulSoup(html, 'html.parser'))
 
     # Loops trough ze images
+    return get_image_links(soup_result)
+
+
+def get_image_links(product_image_ref):
+    images = []
+
+    for img in product_image_ref:
+        # gets src for filename
+        src = img.get('src')
+
+        if src not in images:
+            images.append(src)
+
     return images
 
 

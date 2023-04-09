@@ -19,34 +19,33 @@ def scrape_data_all():
         Tools.add_data(scraped_date, result)
 
     # Create a thread for each scraper
-    bever_thread = threading.Thread(target=run_scraper, args=(Bever.scrape_full, search_term, 1))
-    adidas_thread = threading.Thread(target=run_scraper, args=(Adi.scrape_full, search_term, 1))
-    amazon_thread = threading.Thread(target=run_scraper, args=(Ama.scrape_full, search_term, 1))
-    bol_thread = threading.Thread(target=run_scraper, args=(Bs.scrape_full, search_term, 'Herenmode', 1))
-    deca_thread = threading.Thread(target=run_scraper, args=(Deca.scrape_full, search_term, 1, 1))
+    bever_thread = threading.Thread(target=run_scraper, args=(Bever.scrape_full, search_term, 2))
+    adidas_thread = threading.Thread(target=run_scraper, args=(Adi.scrape_full, search_term, 2))
+    amazon_thread = threading.Thread(target=run_scraper, args=(Ama.scrape_full, search_term, 2, 5))
+    bol_thread = threading.Thread(target=run_scraper, args=(Bs.scrape_full, search_term, 'Herenmode', 2))
+    deca_thread = threading.Thread(target=run_scraper, args=(Deca.scrape_full, search_term, 2, 5))
 
-    # Start all threads
+    # # Start all threads
     # bever_thread.start()
-    time.sleep(5)
-    adidas_thread.start()
-    time.sleep(5)
-    # amazon_thread.start()
-    time.sleep(5)
+    # time.sleep(5)
+    # adidas_thread.start()
+    # time.sleep(5)
+    amazon_thread.start()
+    # time.sleep(5)
     # bol_thread.start()
-    time.sleep(5)
+    # time.sleep(5)
     # deca_thread.start()
 
     # Wait for all threads to complete
     # bever_thread.join()
-    adidas_thread.join()
-    # amazon_thread.join()
+    # adidas_thread.join()
+    amazon_thread.join()
     # bol_thread.join()
     # deca_thread.join()
 
     data = scraped_date['reviews']
     cleaned_data = Tools.remove_unicode(data)
 
-    print(scraped_date['images'])
     test(scraped_date['images'])
     # print("Write reviews to txt and save images")
     save_data(cleaned_data, scraped_date['images'], scraped_date['titles'], scraped_date['prices'])
