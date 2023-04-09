@@ -19,11 +19,11 @@ def scrape_data_all():
         Tools.add_data(scraped_date, result)
 
     # Create a thread for each scraper
-    bever_thread = threading.Thread(target=run_scraper, args=(Bever.scrape_full, search_term, 1))
-    adidas_thread = threading.Thread(target=run_scraper, args=(Adi.scrape_full, search_term, 1))
-    amazon_thread = threading.Thread(target=run_scraper, args=(Ama.scrape_full, search_term, 1, 1))
-    bol_thread = threading.Thread(target=run_scraper, args=(Bs.scrape_full, search_term, 'Herenmode', 1))
-    deca_thread = threading.Thread(target=run_scraper, args=(Deca.scrape_full, search_term, 1, 1))
+    bever_thread = threading.Thread(target=run_scraper, args=(Bever.scrape_full, search_term, 25))
+    adidas_thread = threading.Thread(target=run_scraper, args=(Adi.scrape_full, search_term, 25))
+    amazon_thread = threading.Thread(target=run_scraper, args=(Ama.scrape_full, search_term, 25, 10))
+    bol_thread = threading.Thread(target=run_scraper, args=(Bs.scrape_full, search_term, 'Herenmode', 25))
+    deca_thread = threading.Thread(target=run_scraper, args=(Deca.scrape_full, search_term, 25, 30))
 
     # # Start all threads
     bever_thread.start()

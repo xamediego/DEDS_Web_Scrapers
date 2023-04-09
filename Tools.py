@@ -82,7 +82,7 @@ def write_array_to_file(arr, file_path):
         # Write each row of data to the text file
         for row in arr:
             if row is not None:
-                file.write(row + '\n')
+                file.write(str(row) + '\n')
 
 
 def clear_folder(folder_path):
