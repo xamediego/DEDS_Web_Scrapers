@@ -116,8 +116,6 @@ def prod_page(driver):
 
                 review_articles = driver.find_elements(By.CSS_SELECTOR, 'article.review___3M74F.gl-vspace-bpall-medium')
 
-                print(len(review_articles))
-
                 for review_article in review_articles:
                     expected_review = parse_review(review_article)
                     if expected_review:
@@ -185,7 +183,6 @@ def get_images(driver):
             if x == len(images_holder): break
             img_link = images_holder[x].get_attribute('src')
             if img_link:
-                print(img_link)
                 images.append(img_link)
 
     return images
@@ -229,10 +226,6 @@ def open_lees_meer(driver, old_button):
 
         if len(lees_meer_button) > 0:
             l_m_b = lees_meer_button[0]
-
-            print(l_m_b != old_button)
-            print(l_m_b)
-            print(old_button)
 
             if l_m_b != old_button:
                 try:

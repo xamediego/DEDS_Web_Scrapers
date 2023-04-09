@@ -202,9 +202,6 @@ def p_s(driver, prod_soup, review_page_limit):
 
     data['reviews'] = data['reviews'] + parse_all_reviews(driver, review_page_limit)
 
-    print('AMOUNT OF IMAGES COLLECTED: ' + str(len(data['images'])) + " | AMOUNT OF REVIEWS COLLECTED: " + str(
-        len((data['reviews']))))
-
     return data
 
 

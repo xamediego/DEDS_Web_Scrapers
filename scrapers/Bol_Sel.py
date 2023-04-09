@@ -75,7 +75,6 @@ def initial_navigation(driver, site_url, search_value, selected_category, sub_ca
     time.sleep(1)
 
     categorized_link = get_category_link(driver, selected_category)
-    print(categorized_link)
 
     Tools.load_page(driver, categorized_link, 30)
 

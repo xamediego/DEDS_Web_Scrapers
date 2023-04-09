@@ -104,3 +104,22 @@ def load_page(driver, link, load_time):
         print("Page load Timeout Occurred. Refreshing !!!")
         print(link)
         driver.refresh()
+
+
+def copy_strings(array):
+    new_array = []
+    for string in array:
+        words = string.split()
+        if len(words) >= 100:
+            new_array.append(string)
+    return new_array
+
+def copy_floats(array):
+    new_array = []
+    for string in array:
+        try:
+            float_val = float(string.replace(',', '.'))
+            new_array.append(float_val)
+        except ValueError:
+            pass
+    return new_array
