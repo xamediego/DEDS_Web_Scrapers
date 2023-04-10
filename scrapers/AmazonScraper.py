@@ -27,24 +27,27 @@ def sel_scrape_amazon(search_term, page_limit, review_page_limit):
     url = driver.current_url
     page_counter = 0
 
-    while (page_counter != page_limit) & (check_next(driver, url)):
-        driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
-        time.sleep(1)
+    try:
+        while (page_counter != page_limit) & (check_next(driver, url)):
+            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
+            time.sleep(1)
 
-        url = get_next_url(driver)
+            url = get_next_url(driver)
 
-        data['prices'] = data['prices'] + get_prices(driver)
-        data['titles'] = data['titles'] + get_titles(driver)
+            data['prices'] = data['prices'] + get_prices(driver)
+            data['titles'] = data['titles'] + get_titles(driver)
 
-        r_data = prod_page(driver, review_page_limit)
+            r_data = prod_page(driver, review_page_limit)
 
-        data['reviews'] = data['reviews'] + r_data['reviews']
-        data['images'] = data['images'] + r_data['images']
+            data['reviews'] = data['reviews'] + r_data['reviews']
+            data['images'] = data['images'] + r_data['images']
 
-        Tools.load_page(driver, url, 60)
-        time.sleep(1.5)
+            Tools.load_page(driver, url, 60)
+            time.sleep(1.5)
 
-        page_counter += 1
+            page_counter += 1
+    except:
+        print('ERROR IN AMAZON PAGE LOOP')
 
     driver.close()
 
@@ -163,10 +166,8 @@ def get_data(driver, product_url, review_page_limit):
 
     image_elements = driver.find_elements(By.CSS_SELECTOR, 'img.a-dynamic-image')
 
-
     for image_element in image_elements:
         images.append(image_element.get_attribute("src"))
-
 
     reviews = get_all_reviews(driver, review_page_limit)
 
@@ -178,30 +179,33 @@ def get_all_reviews(driver, review_page_limit):
 
     more_reviews_link = driver.find_elements(By.CSS_SELECTOR, 'a[data-hook="see-all-reviews-link-foot"]')
 
-    if len(more_reviews_link) > 0:
-        more_reviews_link[0].click()
-
-        try_translate(driver)
-        page_count = 0
-
-        while (page_count != review_page_limit) & (check_review_next(driver)):
+    try:
+        if len(more_reviews_link) > 0:
+            more_reviews_link[0].click()
 
             try_translate(driver)
+            page_count = 0
 
-            review_elements = driver.find_elements(By.CSS_SELECTOR, 'span[data-hook="review-body"]')
+            while (page_count != review_page_limit) & (check_review_next(driver)):
 
-            for review in review_elements:
-                review_text = review.text
+                try_translate(driver)
 
-                reviews.append(review_text)
+                review_elements = driver.find_elements(By.CSS_SELECTOR, 'span[data-hook="review-body"]')
 
-            next_link = get_next_review_link(driver)
-            next_link.click()
-            time.sleep(8)
-            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
-            time.sleep(1)
+                for review in review_elements:
+                    review_text = review.text
 
-            page_count += 1
+                    reviews.append(review_text)
+
+                next_link = get_next_review_link(driver)
+                next_link.click()
+                time.sleep(8)
+                driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
+                time.sleep(1)
+
+                page_count += 1
+    except:
+        print('ERROR IN AMAZON REVIEW PAGE LOOP')
 
     return reviews
 

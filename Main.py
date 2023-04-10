@@ -1,5 +1,4 @@
 import time
-
 import Tools
 import DockerTool
 import threading
@@ -10,7 +9,6 @@ from scrapers import Bol_Sel as Bs, AmazonScraper as Ama, Deca_Scraper as Deca, 
 
 def scrape_data_all():
     scraped_date = {'reviews': [], 'images': [], 'prices': [], 'titles': []}
-    print(scraped_date['images'])
     search_term = 'jassen'
 
     # Define a function to run each scraper in a thread
@@ -20,28 +18,28 @@ def scrape_data_all():
 
     # Create a thread for each scraper
     bever_thread = threading.Thread(target=run_scraper, args=(Bever.scrape_full, search_term, 25))
-    adidas_thread = threading.Thread(target=run_scraper, args=(Adi.scrape_full, search_term, 25))
+    adidas_thread = threading.Thread(target=run_scraper, args=(Adi.scrape_full, search_term, 1))
     amazon_thread = threading.Thread(target=run_scraper, args=(Ama.scrape_full, search_term, 25, 10))
     bol_thread = threading.Thread(target=run_scraper, args=(Bs.scrape_full, search_term, 'Herenmode', 25))
     deca_thread = threading.Thread(target=run_scraper, args=(Deca.scrape_full, search_term, 25, 30))
 
-    # # Start all threads
-    bever_thread.start()
-    time.sleep(5)
+    # # # Start all threads
+    # bever_thread.start()
+    # time.sleep(5)
     adidas_thread.start()
-    time.sleep(5)
-    amazon_thread.start()
-    time.sleep(5)
-    bol_thread.start()
-    time.sleep(5)
-    deca_thread.start()
+    # time.sleep(5)
+    # amazon_thread.start()
+    # time.sleep(5)
+    # bol_thread.start()
+    # time.sleep(5)
+    # deca_thread.start()
 
     # Wait for all threads to complete
-    bever_thread.join()
+    # bever_thread.join()
     adidas_thread.join()
-    amazon_thread.join()
-    bol_thread.join()
-    deca_thread.join()
+    # amazon_thread.join()
+    # bol_thread.join()
+    # deca_thread.join()
 
     data = scraped_date['reviews']
     cleaned_reviews = Tools.remove_unicode(data)

@@ -26,17 +26,20 @@ def scraper(search_value, selected_category, page_limit):
     url = driver.current_url
     page_counter = 0
 
-    while (page_counter != page_limit) & (check_next(driver, url)):
-        url = get_next_url(driver)
+    try:
+        while (page_counter != page_limit) & (check_next(driver, url)):
+            url = get_next_url(driver)
 
-        r_data = prod_page(driver)
-        data['reviews'] = data['reviews'] + r_data['reviews']
-        data['images'] = data['images'] + r_data['images']
+            r_data = prod_page(driver)
+            data['reviews'] = data['reviews'] + r_data['reviews']
+            data['images'] = data['images'] + r_data['images']
 
-        data['prices'] = data['prices'] + get_prices(driver)
-        data['titles'] = data['titles'] + get_titles(driver)
+            data['prices'] = data['prices'] + get_prices(driver)
+            data['titles'] = data['titles'] + get_titles(driver)
 
-        page_counter += 1
+            page_counter += 1
+    except:
+        print('ERROR IN BOLL PAGE LOOP')
 
     driver.close()
 

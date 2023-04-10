@@ -37,25 +37,28 @@ def scraper(search_term, page_limit):
 
     initial_navigation(driver, 'https://www.adidas.nl/search?q=', search_term)
 
-    # Adidas site is bloated
+    # Adidas site is bloated and broken
     time.sleep(5)
 
     url = driver.current_url
     page_counter = 0
 
-    while (page_counter != page_limit) & (check_next(driver, url)):
-        close_account_portal(driver)
+    try:
+        while (page_counter != page_limit) & (check_next(driver, url)):
+            close_account_portal(driver)
 
-        url = get_next_url(driver)
+            url = get_next_url(driver)
 
-        data['prices'] = data['prices'] + get_prices(driver)
-        data['titles'] = data['titles'] + get_titles(driver)
+            data['prices'] = data['prices'] + get_prices(driver)
+            data['titles'] = data['titles'] + get_titles(driver)
 
-        r_data = prod_page(driver)
-        data['reviews'] = data['reviews'] + r_data['reviews']
-        data['images'] = data['images'] + r_data['images']
+            r_data = prod_page(driver)
+            data['reviews'] = data['reviews'] + r_data['reviews']
+            data['images'] = data['images'] + r_data['images']
 
-        page_counter += 1
+            page_counter += 1
+    except:
+        print('ERROR IN ADIDAS PAGE LOOP')
 
     driver.close()
 
@@ -71,57 +74,73 @@ def prod_page(driver):
     product_content = driver.find_elements(By.CSS_SELECTOR, 'div.plp-grid___1FP1J')
 
     if len(product_content) > 0:
-        product_links = product_content[0].find_elements(By.CSS_SELECTOR, 'a.glass-product-card__assets-link')
+        try:
+            product_links = product_content[0].find_elements(By.CSS_SELECTOR, 'a.glass-product-card__assets-link')
 
-        product_href = []
+            product_href = []
 
-        for link in product_links:
-            url = link.get_attribute('href')
-            product_href.append(url)
+            for link in product_links:
+                url = link.get_attribute('href')
+                product_href.append(url)
 
-        for link in product_href:
-            Tools.load_page(driver, link, 40)
+            for link in product_href:
+                Tools.load_page(driver, link, 40)
 
-            time.sleep(2)
+                time.sleep(2)
 
-            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
-            time.sleep(1)
+                driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
+                time.sleep(1)
 
-            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
-            time.sleep(1)
+                close_account_portal(driver)
 
-            close_account_portal(driver)
+                time.sleep(0.5)
 
-            time.sleep(0.5)
+                open_review_div = driver.find_elements(By.ID, 'navigation-target-reviews')
 
-            open_review_div = driver.find_elements(By.ID, 'navigation-target-reviews')
+                if len(open_review_div) > 0:
+                    open_review_button = open_review_div[0].find_elements(By.CSS_SELECTOR,
+                                                                          'button.accordion__header___3Pii5')
 
-            if len(open_review_div) > 0:
-                open_review_button = open_review_div[0].find_elements(By.CSS_SELECTOR,
-                                                                      'button.accordion__header___3Pii5')
+                    data['images'] = data['images'] + get_images(driver)
 
-                data['images'] = data['images'] + get_images(driver)
+                    driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
+                    time.sleep(1)
+                    driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
+                    time.sleep(1)
 
-                try:
-                    for r_b in open_review_button:
-                        try:
-                            r_b.click()
-                            time.sleep(0.2)
-                        except:
-                            print('ERROR IN AD SCR WHILE CLICK open review button')
-                except:
-                    print('ERROR IN AD IN RWB LOOP')
+                    try:
+                        for r_b in open_review_button:
+                            try:
+                                r_b.click()
+                                print('MORE R BUTTON CLICKED')
+                                time.sleep(0.5)
+                            except:
+                                print('ERROR IN AD SCR WHILE CLICK open review button')
+                    except:
+                        print('ERROR IN AD IN RWB LOOP')
 
-                open_lees_meer(driver, 0)
+                    open_lees_meer(driver)
 
-                review_articles = driver.find_elements(By.CSS_SELECTOR, 'article.review___3M74F.gl-vspace-bpall-medium')
+                    time.sleep(0.2)
+                    review_articles = get_articles(driver)
+                    print('AMOUNT OF R ARTICLES: ' + str(len(review_articles)))
+                    time.sleep(0.2)
 
-                for review_article in review_articles:
-                    expected_review = parse_review(review_article)
-                    if expected_review:
-                        data['reviews'].append(expected_review)
+                    for review_article in review_articles:
+                        expected_review = parse_review(review_article)
 
+                        if expected_review:
+                            data['reviews'].append(expected_review)
+        except:
+            print('ERROR IN ADIDAS PRODUCT PAGE LOOP')
+
+        print('R leng: ' + str(len(data['reviews'])))
         return data
+
+
+def get_articles(driver):
+    return driver.find_elements(By.CSS_SELECTOR,
+                                           'article.review___3M74F.gl-vspace-bpall-medium')
 
 
 def get_prices(driver):
@@ -172,18 +191,25 @@ def get_next_url(driver):
 
 
 def get_images(driver):
-    images_div = driver.find_elements(By.ID, 'pdp-gallery-desktop-grid-container')
+    gallery_container = driver.find_elements(By.ID, 'navigation-target-gallery')
 
     images = []
 
-    if len(images_div) > 0:
-        images_holder = images_div[0].find_elements(By.CSS_SELECTOR, 'img')
+    if len(gallery_container) > 0:
+        images_div = gallery_container[0].find_elements(By.ID, 'pdp-gallery-desktop-grid-container')
+        more_img_button = gallery_container[0].find_elements(By.CSS_SELECTOR,
+                                                             'button[data-auto-id="image-grid-expand-button"]')
 
-        for x in range(0, 4):
-            if x == len(images_holder): break
-            img_link = images_holder[x].get_attribute('src')
-            if img_link:
-                images.append(img_link)
+        if len(more_img_button) > 0:
+            more_img_button[0].click()
+
+        if len(images_div) > 0:
+            images_holder = images_div[0].find_elements(By.CSS_SELECTOR, 'img')
+
+            for image in images_holder:
+                img_link = image.get_attribute('src')
+                if img_link:
+                    images.append(img_link)
 
     return images
 
@@ -194,6 +220,7 @@ def parse_review(review_article):
     if len(read_more) > 0:
         try:
             read_more[0].click()
+            time.sleep(0.1)
         except:
             print('READ MORE CLICK ERROR')
 
@@ -207,6 +234,7 @@ def parse_review(review_article):
             except:
                 print('TRANSLATE CLICK ERROR')
 
+
     time.sleep(0.2)
 
     review_text_div = review_article.find_elements(By.CSS_SELECTOR,
@@ -218,7 +246,7 @@ def parse_review(review_article):
         return review_text
 
 
-def open_lees_meer(driver, old_button):
+def open_lees_meer(driver):
     reviews_div = driver.find_elements(By.CSS_SELECTOR, 'div.reviews___3fzxE')
 
     if len(reviews_div) > 0:
@@ -227,17 +255,21 @@ def open_lees_meer(driver, old_button):
         if len(lees_meer_button) > 0:
             l_m_b = lees_meer_button[0]
 
-            if l_m_b != old_button:
-                try:
-                    time.sleep(0.2)
+            try:
+                time.sleep(0.2)
+                old_art_count = len(get_articles(driver))
 
-                    l_m_b.click()
+                l_m_b.click()
+                driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
+                time.sleep(1)
 
-                    time.sleep(0.3)
+                new_art_count = len(get_articles(driver))
+                print('OLD: ' + str(old_art_count) + " | NEW: " + str(new_art_count))
 
-                    open_lees_meer(driver, l_m_b)
-                except:
-                    print('LMB Message: element not interactable')
+                if new_art_count > old_art_count:
+                    open_lees_meer(driver)
+            except:
+                print('LMB Message: element not interactable')
 
 
 def close_account_portal(driver):

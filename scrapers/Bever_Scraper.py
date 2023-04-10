@@ -23,18 +23,21 @@ def scraper(search_value, page_limit):
     url = driver.current_url
     page_counter = 0
 
-    while (page_counter != page_limit) & (check_next(driver, url)):
-        url = get_next_url(driver)
+    try:
+        while (page_counter != page_limit) & (check_next(driver, url)):
+            url = get_next_url(driver)
 
-        click_consent_button(driver)
+            click_consent_button(driver)
 
-        data['titles'] = data['titles'] + get_titles(driver)
+            data['titles'] = data['titles'] + get_titles(driver)
 
-        r_data = prod_page(driver)
-        data['prices'] = data['prices'] + r_data['prices']
-        data['images'] = data['images'] + r_data['images']
+            r_data = prod_page(driver)
+            data['prices'] = data['prices'] + r_data['prices']
+            data['images'] = data['images'] + r_data['images']
 
-        page_counter += 1
+            page_counter += 1
+    except:
+        print('ERROR IN BEVER PAGE LOOP')
 
     driver.close()
 
@@ -77,22 +80,25 @@ def prod_page(driver):
 
     time.sleep(1)
 
-    for prod_link in prod_links:
-        Tools.load_page(driver, prod_link, 30)
+    try:
+        for prod_link in prod_links:
+            Tools.load_page(driver, prod_link, 30)
 
-        time.sleep(1)
+            time.sleep(1)
 
-        new_images = get_images(driver)
-        data['images'] = data['images'] + new_images
+            new_images = get_images(driver)
+            data['images'] = data['images'] + new_images
 
-        prices = driver.find_elements(By.CSS_SELECTOR, 'span[data-qa="sell_price"]')
+            prices = driver.find_elements(By.CSS_SELECTOR, 'span[data-qa="sell_price"]')
 
-        if len(prices) > 0:
-            price = prices[0]
-            string_with_euro_symbol = price.text
-            string_without_euro_symbol = string_with_euro_symbol.replace("€", "")
+            if len(prices) > 0:
+                price = prices[0]
+                string_with_euro_symbol = price.text
+                string_without_euro_symbol = string_with_euro_symbol.replace("€", "")
 
-            data['prices'].append(string_without_euro_symbol)
+                data['prices'].append(string_without_euro_symbol)
+    except:
+        print('ERROR IN BEVER IMG LOOP')
 
     return data
 

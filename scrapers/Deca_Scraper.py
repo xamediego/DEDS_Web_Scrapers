@@ -48,33 +48,36 @@ def product_page_catalog_loop(driver, page_limit, review_page_limit):
     page_counter = 0
     url = driver.current_url
 
-    while (page_counter != page_limit) & (check_next(driver, url)):
+    try:
+        while (page_counter != page_limit) & (check_next(driver, url)):
 
-        driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
-        time.sleep(1)
+            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
+            time.sleep(1)
 
-        # Get review/images from item page
-        product_data = get_product_data(driver, review_page_limit)
+            # Get review/images from item page
+            product_data = get_product_data(driver, review_page_limit)
 
-        if product_data:
-            data['reviews'] = data['reviews'] + product_data['reviews']
-            data['images'] = data['images'] + product_data['images']
-            data['prices'] = data['prices'] + product_data['prices']
-            data['titles'] = data['titles'] + product_data['titles']
-        # Navigate to next page
-        # driver.get(url)
-        Tools.load_page(driver, url, 30)
+            if product_data:
+                data['reviews'] = data['reviews'] + product_data['reviews']
+                data['images'] = data['images'] + product_data['images']
+                data['prices'] = data['prices'] + product_data['prices']
+                data['titles'] = data['titles'] + product_data['titles']
+            # Navigate to next page
+            # driver.get(url)
+            Tools.load_page(driver, url, 30)
 
-        next_button = get_next_button(driver)
+            next_button = get_next_button(driver)
 
-        time.sleep(1)
+            time.sleep(1)
 
-        next_button.click()
-        time.sleep(4)
+            next_button.click()
+            time.sleep(4)
 
-        url = driver.current_url
+            url = driver.current_url
 
-        page_counter += 1
+            page_counter += 1
+    except:
+        print('ERROR IN DECA PAGE LOOP')
 
     driver.close()
 
@@ -247,20 +250,23 @@ def parse_all_reviews(driver, review_page_limit):
 
     review_page_count = 0
 
-    while check_next_review(driver):
-        if review_page_count == review_page_limit: break
+    try:
+        while check_next_review(driver):
+            if review_page_count == review_page_limit: break
 
-        reviews = reviews + get_reviews(driver)
+            reviews = reviews + get_reviews(driver)
 
-        next_button = get_next_button_review(driver)
-        next_button.click()
+            next_button = get_next_button_review(driver)
+            next_button.click()
 
-        time.sleep(1)
+            time.sleep(1)
 
-        driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
-        time.sleep(1)
+            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
+            time.sleep(1)
 
-        review_page_count += 1
+            review_page_count += 1
+    except:
+        print('ERROR IN DECA REVIEW LOOP')
 
     return reviews
 
