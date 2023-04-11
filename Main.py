@@ -1,10 +1,9 @@
 import threading
 import time
-
 import DockerTool
 import Tools
 from scrapers import Bol_Sel as Bs, AmazonScraper as Ama, Deca_Scraper as Deca, Adidas_Scraper as Adi, \
-    Bever_Scraper as Bever
+    Bever_Scraper as Bever, Zalando_Scraper as Zalando
 
 
 def scrape_data_all():
@@ -22,6 +21,8 @@ def scrape_data_all():
     amazon_thread = threading.Thread(target=run_scraper, args=(Ama.scrape_full, search_term, 25, 10))
     bol_thread = threading.Thread(target=run_scraper, args=(Bs.scrape_full, search_term, 'Herenmode', 40))
     deca_thread = threading.Thread(target=run_scraper, args=(Deca.scrape_full, search_term, 25, 30))
+    zalando_thread = threading.Thread(target=run_scraper,
+                                      args=(Zalando.scrape_full, search_term + '+sport', 'heren', 25))
 
     # # # Start all threads
     bever_thread.start()
@@ -33,6 +34,8 @@ def scrape_data_all():
     bol_thread.start()
     time.sleep(5)
     deca_thread.start()
+    time.sleep(5)
+    zalando_thread.start()
 
     # Wait for all threads to complete
     bever_thread.join()
@@ -40,6 +43,7 @@ def scrape_data_all():
     amazon_thread.join()
     bol_thread.join()
     deca_thread.join()
+    zalando_thread.join()
 
     data = scraped_date['reviews']
     cleaned_reviews = Tools.remove_unicode(data)
@@ -82,7 +86,6 @@ def save_data(cleaned_reviews, cleaned_reviews_100, images, titles, cleaned_pric
 def download_images(images):
     folder_path_images = "submit/images/"
     Tools.save_images_to_folder(images, folder_path_images)
-    print('IMAGES SHOULD BE SAVED')
 
 
 def upload_to_hadoop():
@@ -104,6 +107,4 @@ def upload_to_hadoop():
     clear_image_folder()
 
 
-# scrape_data_all()
-# download_images(Tools.read_text('submit/image_links/image_links.txt'))
-upload_to_hadoop()
+scrape_data_all()
