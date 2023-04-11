@@ -39,7 +39,10 @@ def scraper(search_value, page_limit):
     except:
         print('ERROR IN BEVER PAGE LOOP')
 
-    driver.close()
+    try:
+        driver.close()
+    except:
+        print('Message: no such window: target window already closed')
 
     print('BEVER SCRAPE END')
     get_scraped_data_size_info(data)

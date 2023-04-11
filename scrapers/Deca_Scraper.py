@@ -3,7 +3,6 @@ import time
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.common import TimeoutException
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 
@@ -79,7 +78,10 @@ def product_page_catalog_loop(driver, page_limit, review_page_limit):
     except:
         print('ERROR IN DECA PAGE LOOP')
 
-    driver.close()
+    try:
+        driver.close()
+    except:
+        print('Message: no such window: target window already closed')
 
     print('DECA SCRAPE END')
     get_scraped_data_size_info(data)
@@ -138,7 +140,7 @@ def get_catalog_soup(driver):
 
 
 def check_next(driver, link):
-    Tools.load_page(driver, link, 30)
+    Tools.load_page(driver, link, 60)
 
     time.sleep(1)
 
@@ -191,7 +193,7 @@ def p_s(driver, prod_soup, review_page_limit):
     # Get product images
     time.sleep(0.5)
 
-    Tools.load_page(driver, link, 30)
+    Tools.load_page(driver, link, 60)
 
     time.sleep(1)
 
@@ -200,7 +202,7 @@ def p_s(driver, prod_soup, review_page_limit):
     # Get product reviews
     review_link = link.replace("nl//p/", "nl/r/")
 
-    Tools.load_page(driver, review_link, 30)
+    Tools.load_page(driver, review_link, 60)
     time.sleep(1)
 
     data['reviews'] = data['reviews'] + parse_all_reviews(driver, review_page_limit)

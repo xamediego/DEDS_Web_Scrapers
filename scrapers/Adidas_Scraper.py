@@ -60,7 +60,10 @@ def scraper(search_term, page_limit):
     except:
         print('ERROR IN ADIDAS PAGE LOOP')
 
-    driver.close()
+    try:
+        driver.close()
+    except:
+        print('Message: no such window: target window already closed')
 
     print('ADIDAS SCRAPE END')
     get_scraped_data_size_info(data)

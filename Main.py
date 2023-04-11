@@ -1,8 +1,8 @@
-import time
-import Tools
-import DockerTool
 import threading
+import time
 
+import DockerTool
+import Tools
 from scrapers import Bol_Sel as Bs, AmazonScraper as Ama, Deca_Scraper as Deca, Adidas_Scraper as Adi, \
     Bever_Scraper as Bever
 
@@ -18,28 +18,28 @@ def scrape_data_all():
 
     # Create a thread for each scraper
     bever_thread = threading.Thread(target=run_scraper, args=(Bever.scrape_full, search_term, 25))
-    adidas_thread = threading.Thread(target=run_scraper, args=(Adi.scrape_full, search_term, 1))
+    adidas_thread = threading.Thread(target=run_scraper, args=(Adi.scrape_full, search_term, 25))
     amazon_thread = threading.Thread(target=run_scraper, args=(Ama.scrape_full, search_term, 25, 10))
-    bol_thread = threading.Thread(target=run_scraper, args=(Bs.scrape_full, search_term, 'Herenmode', 25))
+    bol_thread = threading.Thread(target=run_scraper, args=(Bs.scrape_full, search_term, 'Herenmode', 40))
     deca_thread = threading.Thread(target=run_scraper, args=(Deca.scrape_full, search_term, 25, 30))
 
     # # # Start all threads
-    # bever_thread.start()
-    # time.sleep(5)
+    bever_thread.start()
+    time.sleep(5)
     adidas_thread.start()
-    # time.sleep(5)
-    # amazon_thread.start()
-    # time.sleep(5)
-    # bol_thread.start()
-    # time.sleep(5)
-    # deca_thread.start()
+    time.sleep(5)
+    amazon_thread.start()
+    time.sleep(5)
+    bol_thread.start()
+    time.sleep(5)
+    deca_thread.start()
 
     # Wait for all threads to complete
-    # bever_thread.join()
+    bever_thread.join()
     adidas_thread.join()
-    # amazon_thread.join()
-    # bol_thread.join()
-    # deca_thread.join()
+    amazon_thread.join()
+    bol_thread.join()
+    deca_thread.join()
 
     data = scraped_date['reviews']
     cleaned_reviews = Tools.remove_unicode(data)
@@ -104,4 +104,6 @@ def upload_to_hadoop():
     clear_image_folder()
 
 
-scrape_data_all()
+# scrape_data_all()
+# download_images(Tools.read_text('submit/image_links/image_links.txt'))
+upload_to_hadoop()

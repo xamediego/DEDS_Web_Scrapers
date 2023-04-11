@@ -16,7 +16,7 @@ def scrape_full(search_term, bol_category, page_limit):
 
 
 def scraper(search_value, selected_category, page_limit):
-    data = {'reviews': [], 'images': [], 'prices': [], 'titles' : []}
+    data = {'reviews': [], 'images': [], 'prices': [], 'titles': []}
 
     driver = webdriver.Edge()
     driver.set_window_size(1600, 1000)
@@ -41,25 +41,30 @@ def scraper(search_value, selected_category, page_limit):
     except:
         print('ERROR IN BOLL PAGE LOOP')
 
-    driver.close()
+    try:
+        driver.close()
+    except:
+        print('Message: no such window: target window already closed')
 
     print('BOL SCRAPE END')
     get_scraped_data_size_info(data)
 
     return data
 
+
 def get_titles(driver):
     titles = []
 
-    product_tiles = driver.find_elements(By.CSS_SELECTOR , 'div.product-item__content')
+    product_tiles = driver.find_elements(By.CSS_SELECTOR, 'div.product-item__content')
 
     for product in product_tiles:
-        title_a = product.find_elements(By.CSS_SELECTOR , 'a.product-title.px_list_page_product_click.list_page_product_tracking_target')
+        title_a = product.find_elements(By.CSS_SELECTOR,
+                                        'a.product-title.px_list_page_product_click.list_page_product_tracking_target')
         if len(title_a) > 0:
             titles.append(title_a[0].text)
 
-
     return titles
+
 
 def initial_navigation(driver, site_url, search_value, selected_category, sub_category):
     hdr = {

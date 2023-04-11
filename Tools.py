@@ -9,16 +9,19 @@ def save_images_to_folder(image_urls, folder_path):
 
     # Loop over each image URL
     for i, url in enumerate(image_urls):
-        if url is not None:
-            # Get the image data from the URL
-            response = requests.get(url)
+        try:
+            if url is not None:
+                # Get the image data from the URL
+                response = requests.get(url)
 
-            # Generate a unique filename for the image
-            filename = f"image_{i}.jpg"
+                # Generate a unique filename for the image
+                filename = f"image_{i}.jpg"
 
-            # Save the image to the folder
-            with open(os.path.join(folder_path, filename), "wb") as f:
-                f.write(response.content)
+                # Save the image to the folder
+                with open(os.path.join(folder_path, filename), "wb") as f:
+                    f.write(response.content)
+        except:
+            print('INVALID URL IMAGE FORM')
 
 
 def add_data(d1, d2):
@@ -114,6 +117,7 @@ def copy_strings(array):
             new_array.append(string)
     return new_array
 
+
 def copy_floats(array):
     new_array = []
     for string in array:
@@ -123,3 +127,10 @@ def copy_floats(array):
         except ValueError:
             pass
     return new_array
+
+
+def read_text(file_path):
+    f = open(file_path, "r")
+    data = f.read().splitlines()
+
+    return data

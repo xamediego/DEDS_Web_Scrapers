@@ -49,7 +49,10 @@ def sel_scrape_amazon(search_term, page_limit, review_page_limit):
     except:
         print('ERROR IN AMAZON PAGE LOOP')
 
-    driver.close()
+    try:
+        driver.close()
+    except:
+        print('Message: no such window: target window already closed')
 
     print('AMAZON SCRAPE END')
     get_scraped_data_size_info(data)
