@@ -1,2 +1,2 @@
 # DEDS_Web_Scrapers
-Web scrapers made for assignement that needed lots of data
+Web scrapers using BeautifulSoup and Selenium made for assignement that needed lots of data for analysis and ml.
